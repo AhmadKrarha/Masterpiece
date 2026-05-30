@@ -1,0 +1,131 @@
+﻿@model Materpiece.Areas.Admin.ViewModels.CreateStationViewModel
+@{
+    ViewData["Title"] = "Add New Charging Station";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Register New Charging Station</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-area="Admin" asp-controller="Stations" asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">Station Name</label>
+                            <input asp-for="Name" class="form-label form-control" placeholder="e.g., Amman Hub Fast Charger" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label fw-bold">Street Address</label>
+                            <input asp-for="Address" class="form-control" placeholder="e.g., King Abdullah II St, Amman" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">Description / Instructions</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Provide parking details or access instructions..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="NormalAcSlotsCount" class="control-label"></label>
+                                    <input asp-for="NormalAcSlotsCount" type="number" class="form-control" min="0" value="0" />
+                                    <span asp-validation-for="NormalAcSlotsCount" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FastDcSlotsCount" class="control-label"></label>
+                                    <input asp-for="FastDcSlotsCount" type="number" class="form-control" min="0" value="0" />
+                                    <span asp-validation-for="FastDcSlotsCount" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-success">Pin Location on Map</label>
+                            <p class="text-muted small">Click anywhere on the map below to pinpoint your charging station's exact coordinates.</p>
+
+                            <div id="stationMap" style="height: 350px; width: 100%;" class="rounded border border-secondary shadow-sm mb-3"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Latitude" class="form-label small text-muted">Latitude</label>
+                                    <input asp-for="Latitude" id="latInput" class="form-control bg-light" readonly placeholder="Click map to auto-fill" />
+                                    <span asp-validation-for="Latitude" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Longitude" class="form-label small text-muted">Longitude</label>
+                                    <input asp-for="Longitude" id="lngInput" class="form-control bg-light" readonly placeholder="Click map to auto-fill" />
+                                    <span asp-validation-for="Longitude" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-area="Admin" asp-controller="Stations" asp-action="Index" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">
+                                Save Station
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    // Initialize the map centered on Jordan defaults (Amman area)
+    const defaultLat = 31.9522;
+    const defaultLng = 35.9106;
+    const map = L.map('stationMap').setView([defaultLat, defaultLng], 12);
+
+    // Load OpenStreetMap Tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Initialize an empty placeholder variable for our interactive marker
+    let selectedMarker = null;
+
+    // Listen for click events anywhere on the Leaflet Map map canvas
+    map.on('click', function(e) {
+        const clickedLat = e.latlng.lat.toFixed(6); // Rounds to decimal(9,6) database specifications
+        const clickedLng = e.latlng.lng.toFixed(6);
+
+        // Inject data back into the read-only DOM form inputs
+        document.getElementById('latInput').value = clickedLat;
+        document.getElementById('lngInput').value = clickedLng;
+
+        // If a marker already exists from a previous click, update its location
+        if (selectedMarker) {
+            selectedMarker.setLatLng(e.latlng);
+        } else {
+            // Otherwise, drop a brand new pin on the map canvas
+            selectedMarker = L.marker(e.latlng, { draggable: false }).addTo(map);
+        }
+    });
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

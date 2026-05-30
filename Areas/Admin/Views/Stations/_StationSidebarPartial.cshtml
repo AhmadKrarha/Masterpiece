@@ -1,0 +1,34 @@
+﻿@model Materpiece.Models.Station
+
+<div class="p-3">
+    <h4>@Model.Name</h4>
+    <p class="text-muted">@Model.Address</p>
+    <p>@Model.Description</p>
+    <hr />
+    
+    <h5>Available Chargers (@Model.TotalSlots Total)</h5>
+    <ul class="list-group mb-3">
+        @foreach(var slot in Model.ChargerSlots)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                Slot @slot.SlotNumber (@slot.Type)
+                <span class="badge bg-@(slot.Status.ToString() == "Available" ? "success" : "danger")">
+                    @slot.Status
+                </span>
+            </li>
+        }
+    </ul>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <a href="/Bookings/Reserve?stationId=@Model.StationId" class="btn btn-primary w-100 py-2 shadow-sm">
+            <i class="fas fa-calendar-check me-2"></i> Book a Charger here
+        </a>
+    }
+    else
+    {
+        <a href="/Identity/Account/Login?ReturnUrl=%2FMap" class="btn btn-warning w-100 py-2 shadow-sm fw-bold">
+            <i class="fas fa-sign-in-alt me-2"></i> Login to Book this Station
+        </a>
+    }
+</div>

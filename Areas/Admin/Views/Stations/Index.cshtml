@@ -1,0 +1,53 @@
+﻿@model IEnumerable<Station>
+
+@{
+    ViewData["Title"] = "My Charging Stations";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Charging Stations</h2>
+        <a asp-area="Admin" asp-controller="Stations" asp-action="Create" class="btn btn-primary">
+            + Add New Station
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover shadow-sm rounded">
+            <thead class="table-dark">
+                <tr>
+                    <th>Station Name</th>
+                    <th>Address</th>
+                    <th>Total Slots</th>
+                    <th>Coordinates (Lat, Lng)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            You haven't added any stations yet. Click "Add New Station" to begin!
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold">@item.Name</td>
+                            <td>@item.Address</td>
+                            <td>@item.TotalSlots</td>
+                            <td>@item.Latitude, @item.Longitude</td>
+                            <td>
+                                <a asp-area="Admin" asp-controller="Stations" asp-action="Edit" asp-route-id="@item.StationId" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

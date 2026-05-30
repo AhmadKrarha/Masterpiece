@@ -1,0 +1,113 @@
+﻿@model Station
+
+@{
+    ViewData["Title"] = "Edit Charging Station";
+}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Edit Station: @Model.Name</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-area="Admin" asp-controller="Stations" asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <input type="hidden" asp-for="StationId" />
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">Station Name</label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label fw-bold">Street Address</label>
+                            <input asp-for="Address" class="form-control" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">Description / Instructions</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="TotalSlots" class="form-label fw-bold">Total Charging Slots</label>
+                            <input asp-for="TotalSlots" type="number" class="form-control" min="1" />
+                            <span asp-validation-for="TotalSlots" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-primary">Modify Location on Map</label>
+                            <p class="text-muted small">Click a new spot on the map to relocate your station's pin if needed.</p>
+
+                            <div id="stationMap" style="height: 350px; width: 100%;" class="rounded border border-secondary shadow-sm mb-3"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Latitude" class="form-label small text-muted">Latitude</label>
+                                    <input asp-for="Latitude" id="latInput" class="form-control bg-light" readonly />
+                                    <span asp-validation-for="Latitude" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Longitude" class="form-label small text-muted">Longitude</label>
+                                    <input asp-for="Longitude" id="lngInput" class="form-control bg-light" readonly />
+                                    <span asp-validation-for="Longitude" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/Admin/Stations" class="btn btn-outline-secondary">Back to List</a>
+                            <button type="submit" class="btn btn-primary px-4">Update Station</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    // Grab the existing coordinates directly from our C# Model metadata
+    const initialLat = @Model.Latitude;
+    const initialLng = @Model.Longitude;
+
+    // Center map precisely on the station's existing location
+    const map = L.map('stationMap').setView([initialLat, initialLng], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Seed the map with a pre-existing marker pin at the database location
+    let selectedMarker = L.marker([initialLat, initialLng]).addTo(map);
+
+    // Allow user to click to move the pin locations
+    map.on('click', function(e) {
+        const clickedLat = e.latlng.lat.toFixed(6);
+        const clickedLng = e.latlng.lng.toFixed(6);
+
+        document.getElementById('latInput').value = clickedLat;
+        document.getElementById('lngInput').value = clickedLng;
+
+        selectedMarker.setLatLng(e.latlng);
+    });
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

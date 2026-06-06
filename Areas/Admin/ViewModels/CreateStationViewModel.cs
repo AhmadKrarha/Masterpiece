@@ -1,9 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Materpiece.Areas.Admin.ViewModels
 {
     public class CreateStationViewModel
     {
+        [Required]
+        [Display(Name = "Station Owner")]
+        public string SelectedOwnerId { get; set; }
+
+        public SelectList? UsersList { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; }

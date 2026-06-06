@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Materpiece.ViewModels
+namespace Materpiece.Models.ViewModels
 {
     public class CreateBookingViewModel
     {

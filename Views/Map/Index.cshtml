@@ -1,27 +1,751 @@
-﻿@{
+@{
     ViewData["Title"] = "Find Charging Stations";
 }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
+<style>
+    /* Smooth Scroll Behavior */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Hero Panel Styles */
+    .hero-panel {
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        margin-top: -2rem; /* Pull up to nav border */
+        background: radial-gradient(circle at 80% 20%, #1e2530 0%, #0b0d11 100%);
+        color: #ffffff;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        padding-top: 5.5rem;
+        padding-bottom: 8.5rem; /* Spacious padding for slanted divider */
+        position: relative;
+    }
+
+    .hero-panel::after {
+        content: '';
+        position: absolute;
+        top: 10%;
+        right: 15%;
+        width: 450px;
+        height: 450px;
+        background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-size: 3.75rem;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -1px;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .hero-subtitle {
+        color: #94a3b8;
+        font-size: 1.25rem;
+        line-height: 1.7;
+        font-weight: 400;
+        max-width: 540px;
+    }
+
+    .badge-low-battery {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 100px;
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        animation: pulseRed 1.6s infinite;
+    }
+
+    @@keyframes pulseRed {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+
+    /* Dying Battery CTA Button */
+    .dying-battery-btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 36px;
+        background: rgba(239, 68, 68, 0.05);
+        border: 3px solid #ef4444;
+        border-radius: 12px;
+        color: #ffffff;
+        font-size: 1.05rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-decoration: none;
+        overflow: visible;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Battery Nub (Positive Terminal) */
+    .dying-battery-btn::after {
+        content: '';
+        position: absolute;
+        right: -8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 16px;
+        background: #ef4444;
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+        transition: all 0.4s ease;
+    }
+
+    /* Battery Fill indicating low/dying charge */
+    .dying-battery-btn .battery-fill {
+        position: absolute;
+        left: 4px;
+        top: 4px;
+        bottom: 4px;
+        width: 15%;
+        background: #ef4444;
+        border-radius: 6px;
+        z-index: 1;
+        animation: lowBatteryPulse 1.5s infinite alternate;
+        transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+    }
+
+    .dying-battery-btn .btn-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .dying-battery-btn .battery-status-icon {
+        font-size: 1.2rem;
+        animation: iconBlink 1.2s infinite steps(2);
+    }
+
+    @@keyframes lowBatteryPulse {
+        0% {
+            opacity: 0.5;
+            box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+        }
+        100% {
+            opacity: 1;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.9);
+        }
+    }
+
+    @@keyframes iconBlink {
+        0%, 100% { opacity: 1; color: #ef4444; }
+        50% { opacity: 0.3; color: #ffffff; }
+    }
+
+    /* Hover States - Battery Charges Up! */
+    .dying-battery-btn:hover {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        transform: scale(1.05);
+        color: #ffffff;
+    }
+
+    .dying-battery-btn:hover::after {
+        background: #10b981;
+    }
+
+    .dying-battery-btn:hover .battery-fill {
+        width: calc(100% - 8px);
+        background: linear-gradient(90deg, #10b981, #06b6d4);
+        animation: none;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+    }
+
+    .dying-battery-btn:hover .battery-status-icon {
+        animation: chargingActive 0.6s infinite linear;
+        color: #ffffff;
+    }
+
+    @@keyframes chargingActive {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); text-shadow: 0 0 8px #fff; }
+        100% { transform: scale(1); }
+    }
+
+    /* Hero Image Styles */
+    .hero-image-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .hero-img {
+        transition: transform 0.5s ease;
+        animation: floatImg 6s ease-in-out infinite;
+    }
+
+    .hero-image-container:hover .hero-img {
+        transform: scale(1.02);
+    }
+
+    @@keyframes floatImg {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Map Section Styling */
+    .section-title {
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    /* Active Booking Widget Styles */
+    @@keyframes pulseWarning {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .pulse-icon {
+        animation: pulseWarning 1.5s infinite ease-in-out;
+    }
+    .bg-emerald-gradient {
+        background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    }
+
+    /* Custom Leaflet Zoom styling */
+    .leaflet-control-zoom {
+        border: none !important;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15) !important;
+    }
+    .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        transition: all 0.25s ease !important;
+        width: 34px !important;
+        height: 34px !important;
+        line-height: 34px !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-weight: 600 !important;
+    }
+    .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+        transform: scale(1.05) !important;
+    }
+    .leaflet-bar a:first-child {
+        border-top-left-radius: 12px !important;
+        border-top-right-radius: 12px !important;
+    }
+    .leaflet-bar a:last-child {
+        border-bottom-left-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
+        border-bottom: none !important;
+    }
+
+    /* Live Network Dot pulse styling */
+    .pulse-green-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulseGreen 1.6s infinite;
+    }
+
+    @@keyframes pulseGreen {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
+    /* Partners Marquee Styling */
+    .partners-marquee-container {
+        overflow: hidden;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        padding: 1.5rem 0;
+        background: #f8fafc;
+    }
+    .partners-marquee-container::before,
+    .partners-marquee-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        width: 15vw;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+    }
+    .partners-marquee-container::before {
+        left: 0;
+        background: linear-gradient(90deg, #f8fafc 0%, transparent 100%);
+    }
+    .partners-marquee-container::after {
+        right: 0;
+        background: linear-gradient(-90deg, #f8fafc 0%, transparent 100%);
+    }
+    .partners-marquee-track {
+        display: flex;
+        gap: 2rem;
+        animation: scrollMarquee 25s linear infinite;
+        width: max-content;
+        padding-left: 2rem;
+    }
+    .partners-marquee-track:hover {
+        animation-play-state: paused;
+    }
+    .partner-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 1.25rem 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        height: 100px;
+        width: 290px;
+        flex-shrink: 0;
+    }
+    .partner-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px -3px rgba(16, 185, 129, 0.08), 0 4px 6px -2px rgba(16, 185, 129, 0.04);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .partner-logo-wrapper {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        flex-shrink: 0;
+    }
+    .partner-info {
+        flex-grow: 1;
+    }
+    .partner-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.1rem;
+    }
+    .partner-tag {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
+        display: block;
+    }
+    @@keyframes scrollMarquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(calc(-50% - 1rem)); }
+    }
+
+    /* Hero Slant Divider Styling */
+    .hero-slant-divider {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        overflow: hidden;
+        line-height: 0;
+        z-index: 3;
+    }
+    .hero-slant-divider svg {
+        position: relative;
+        display: block;
+        width: calc(100% + 1.3px);
+        height: 60px;
+    }
+    .hero-slant-divider .shape-fill {
+        fill: #f8fafc;
+    }
+
+    /* Pre-Footer CTA Banner Styles */
+    .pre-footer-cta-banner {
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        background: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+        padding: 5.5rem 0;
+        margin-top: 5rem;
+        margin-bottom: -4rem; /* Pull down to overlay main container bottom padding and touch the footer */
+        position: relative;
+        z-index: 2;
+        box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.05), 0 -10px 30px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+    }
+    .pre-footer-cta-banner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    .pre-footer-cta-banner .btn-light:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+        background-color: #ffffff !important;
+    }
+    .pre-footer-cta-banner .btn-outline-light:hover {
+        transform: translateY(-2px);
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-color: #ffffff !important;
+    }
+</style>
+
 <div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col">
-            <h2>Find an Available EV Charging Station</h2>
-            <p class="text-muted">Explore near-real-time slot tracking and book your charging windows instantly.</p>
+    <!-- Hero Section -->
+    <div class="hero-panel mb-5">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6 hero-text-col position-relative" style="z-index: 2;">
+                    <span class="badge-low-battery mb-3">
+                        <span class="pulse-dot"></span> Low Battery Warning
+                    </span>
+                    <h1 class="hero-title mb-3">Stuck with a <span class="text-danger">Dying Battery</span>?</h1>
+                    <p class="hero-subtitle mb-4">
+                        Don't get stranded. Check real-time charging slot availability and book your charging spot instantly. Find your nearest EV charger now.
+                    </p>
+                    <div class="hero-cta-wrapper">
+                        <a href="#map-section" class="dying-battery-btn">
+                            <span class="battery-fill"></span>
+                            <span class="btn-content">
+                                <span class="battery-status-icon">⚡</span>
+                                <span class="btn-text">Battery Low - Find Charger</span>
+                            </span>
+                        </a>
+                    </div>
+                    <!-- Trust Indicators / Social Proof -->
+                    <div class="mt-4 d-flex flex-wrap align-items-center gap-3 text-white-50 small" style="font-family: 'Outfit', sans-serif;">
+                        <span class="d-flex align-items-center"><i class="bi bi-geo-alt-fill text-emerald me-1.5"></i> 500+ Stations</span>
+                        <span class="opacity-25 d-none d-sm-inline">|</span>
+                        <span class="d-flex align-items-center"><i class="bi bi-lightning-charge-fill text-cyan me-1.5"></i> Real-time Slots</span>
+                        <span class="opacity-25 d-none d-sm-inline">|</span>
+                        <span class="d-flex align-items-center"><i class="bi bi-shield-check-fill text-emerald me-1.5"></i> Instant Booking</span>
+                    </div>
+                </div>
+                <div class="col-lg-6 hero-image-col text-center position-relative" style="z-index: 2;">
+                    <div class="hero-image-container">
+                        <img src="/images/hero-ev-solution.png" alt="EV charging solution" class="img-fluid hero-img" style="max-height: 420px; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(6, 182, 212, 0.15));" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Slanted SVG Divider -->
+        <div class="hero-slant-divider">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M1200 120L0 120 0 0z" class="shape-fill"></path>
+            </svg>
         </div>
     </div>
 
-    <div class="d-flex rounded border shadow-sm mb-5" style="height: 600px; overflow: hidden; position: relative;">
+    <!-- Partners Section -->
+    <div class="partners-section mb-5 py-3">
+        <div class="text-center mb-4">
+            <h5 class="text-uppercase tracking-wider text-muted small fw-bold mb-1"><i class="bi bi-handshake text-emerald me-2"></i>Our Partners</h5>
+            <h3 class="fw-bold text-dark" style="font-family: 'Outfit', sans-serif;">Trusted Network in Jordan</h3>
+        </div>
 
-        <div id="driverMap" style="flex-grow: 1; height: 100%;"></div>
+        <div class="partners-marquee-container">
+            <div class="partners-marquee-track">
+                <!-- Card 1: JoPetrol -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="#1e3a8a" />
+                            <path d="M 30,50 Q 50,20 70,50 Q 50,80 30,50 Z" fill="#f97316" />
+                            <circle cx="50" cy="50" r="10" fill="#10b981" />
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">JoPetrol</div>
+                        <span class="partner-tag">Jordan Petrol Refinery Co.</span>
+                    </div>
+                </div>
 
-        <div id="stationSidebar" style="width: 380px; display: none; background-color: #fff; border-left: 1px solid #ddd; height: 100%; overflow-y: auto; z-index: 1000;">
-            <div id="sidebarContent">
+                <!-- Card 2: Manaseer Oil & Gas -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <rect x="15" y="15" width="70" height="70" rx="15" fill="#0f766e" />
+                            <path d="M 35,65 L 50,35 L 65,65" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                            <circle cx="50" cy="30" r="6" fill="#06b6d4" />
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">Manaseer Oil & Gas</div>
+                        <span class="partner-tag">Pioneering Jordan's Energy</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: TotalEnergies -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="#ffffff" stroke="#e11d48" stroke-width="4" />
+                            <path d="M 50,15 A 35,35 0 0,1 85,50 A 35,35 0 0,1 50,85 A 35,35 0 0,1 15,50" fill="none" stroke="url(#totalGrad)" stroke-width="12" stroke-linecap="round" />
+                            <defs>
+                                <linearGradient id="totalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ea580c" />
+                                    <stop offset="50%" stop-color="#e11d48" />
+                                    <stop offset="100%" stop-color="#2563eb" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">TotalEnergies</div>
+                        <span class="partner-tag">TotalEnergies Jordan</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Gulf Jordan -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="#ea580c" />
+                            <circle cx="50" cy="50" r="35" fill="#1e40af" />
+                            <text x="50" y="58" font-family="'Outfit', sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">GULF</text>
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">Gulf Jordan</div>
+                        <span class="partner-tag">Gulf Oil Jordan</span>
+                    </div>
+                </div>
+
+                <!-- Card 5: Shell Jordan -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <path d="M 50,10 C 25,10 15,35 15,65 C 15,80 30,85 50,90 C 70,85 85,80 85,65 C 85,35 75,10 50,10 Z" fill="#e11d48" />
+                            <path d="M 50,18 C 32,18 24,38 24,62 C 24,72 34,78 50,82 C 66,78 76,72 76,62 C 76,38 68,18 50,18 Z" fill="#fbbf24" />
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">Shell Jordan</div>
+                        <span class="partner-tag">Shell Stations Jordan</span>
+                    </div>
+                </div>
+
+                <!-- Repeated Cards for Seamless Loop -->
+                <!-- Card 1 Repeat -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="#1e3a8a" />
+                            <path d="M 30,50 Q 50,20 70,50 Q 50,80 30,50 Z" fill="#f97316" />
+                            <circle cx="50" cy="50" r="10" fill="#10b981" />
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">JoPetrol</div>
+                        <span class="partner-tag">Jordan Petrol Refinery Co.</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 Repeat -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <rect x="15" y="15" width="70" height="70" rx="15" fill="#0f766e" />
+                            <path d="M 35,65 L 50,35 L 65,65" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                            <circle cx="50" cy="30" r="6" fill="#06b6d4" />
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">Manaseer Oil & Gas</div>
+                        <span class="partner-tag">Pioneering Jordan's Energy</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 Repeat -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="#ffffff" stroke="#e11d48" stroke-width="4" />
+                            <path d="M 50,15 A 35,35 0 0,1 85,50 A 35,35 0 0,1 50,85 A 35,35 0 0,1 15,50" fill="none" stroke="url(#totalGrad2)" stroke-width="12" stroke-linecap="round" />
+                            <defs>
+                                <linearGradient id="totalGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ea580c" />
+                                    <stop offset="50%" stop-color="#e11d48" />
+                                    <stop offset="100%" stop-color="#2563eb" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">TotalEnergies</div>
+                        <span class="partner-tag">TotalEnergies Jordan</span>
+                    </div>
+                </div>
+
+                <!-- Card 4 Repeat -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="#ea580c" />
+                            <circle cx="50" cy="50" r="35" fill="#1e40af" />
+                            <text x="50" y="58" font-family="'Outfit', sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">GULF</text>
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">Gulf Jordan</div>
+                        <span class="partner-tag">Gulf Oil Jordan</span>
+                    </div>
+                </div>
+
+                <!-- Card 5 Repeat -->
+                <div class="partner-card">
+                    <div class="partner-logo-wrapper">
+                        <svg width="42" height="42" viewBox="0 0 100 100">
+                            <path d="M 50,10 C 25,10 15,35 15,65 C 15,80 30,85 50,90 C 70,85 85,80 85,65 C 85,35 75,10 50,10 Z" fill="#e11d48" />
+                            <path d="M 50,18 C 32,18 24,38 24,62 C 24,72 34,78 50,82 C 66,78 76,72 76,62 C 76,38 68,18 50,18 Z" fill="#fbbf24" />
+                        </svg>
+                    </div>
+                    <div class="partner-info">
+                        <div class="partner-name">Shell Jordan</div>
+                        <span class="partner-tag">Shell Stations Jordan</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Section -->
+    <div id="map-section" class="mb-5 pt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="ps-3 border-start border-4" style="border-left: 4px solid #10b981 !important;">
+                    <span class="badge bg-emerald-gradient text-white text-uppercase tracking-wider small fw-bold mb-2" style="font-size: 0.72rem; letter-spacing: 1.5px; padding: 6px 12px; border-radius: 100px;">Live Booking Network</span>
+                    <h2 class="section-title h2 fw-bold text-dark mb-1" style="font-family: 'Outfit', sans-serif;">Find an Available EV Charging Station</h2>
+                    <p class="text-muted mb-0">Explore near-real-time slot tracking and book your charging windows instantly.</p>
+                </div>
             </div>
         </div>
 
+        <div class="d-flex rounded border shadow-sm" style="height: 600px; overflow: hidden; position: relative;">
+            <!-- Floating Active Booking Widget -->
+            <div id="activeBookingWidget" class="card shadow-lg border-0 d-none" style="position: absolute; top: 20px; left: 20px; z-index: 1001; width: 320px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; color: #fff;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-emerald-gradient text-white text-uppercase tracking-wider small fw-bold" id="widgetStatusBadge">Upcoming Session</span>
+                        <button type="button" class="btn-close btn-close-white btn-sm opacity-50 shadow-none" onclick="hideBookingWidget()" aria-label="Close"></button>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-white" id="widgetStationName">Station Name</h6>
+                    <p class="text-white-50 small mb-3"><i class="bi bi-outlet me-1"></i> <span id="widgetSlotNumber">Slot 01</span></p>
+                    
+                    <div class="d-flex align-items-center gap-3 bg-white bg-opacity-10 p-3 rounded-4 border border-white border-opacity-10">
+                        <div class="fs-2 text-emerald">
+                            <i class="bi bi-hourglass-split" id="widgetTimerIcon"></i>
+                        </div>
+                        <div>
+                            <span class="text-white-50 small d-block" id="widgetTimerLabel">Starts in</span>
+                            <span class="fw-bold text-white fs-4" id="widgetCountdown">00:00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Live Network Stats Widget -->
+            <div id="networkStatsWidget" class="card shadow-lg border-0" style="position: absolute; bottom: 20px; left: 20px; z-index: 1001; width: 280px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; color: #fff; transition: all 0.3s ease;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="pulse-green-dot"></span>
+                        <span class="text-white-50 text-uppercase tracking-wider fw-bold" style="font-size: 0.72rem; letter-spacing: 1px;">Live Network Status</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1.5">
+                        <span class="text-white-50 small">Active Stations</span>
+                        <span class="fw-bold text-white" id="statsStationCount">-- Stations</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-white-50 small">Available Slots</span>
+                        <span class="fw-bold text-emerald" id="statsSlotCount">-- Slots</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="driverMap" style="flex-grow: 1; height: 100%;"></div>
+            <div id="stationSidebar" style="width: 380px; display: none; background-color: #fff; border-left: 1px solid #ddd; height: 100%; overflow-y: auto; z-index: 1000;">
+                <div id="sidebarContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pre-Footer CTA Banner -->
+    <div class="pre-footer-cta-banner">
+        <div class="container py-5 text-center text-white">
+            <h3 class="fw-bold mb-3 h2" style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; letter-spacing: -0.5px;">Ready to Charge Smarter?</h3>
+            <p class="mb-4 opacity-90 mx-auto" style="max-width: 600px; font-size: 1.1rem; line-height: 1.6;">Join Jordan's premier smart EV reservation network today. Lock in your charging slots and skip the queues.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Home" asp-action="AboutUs" class="btn btn-light px-4 py-2.5 fw-bold text-dark border-0 shadow-sm" style="border-radius: 10px; transition: all 0.25s ease;">Learn More</a>
+                <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-light px-4 py-2.5 fw-bold" style="border-radius: 10px; transition: all 0.25s ease; border-color: rgba(255, 255, 255, 0.45);">Get Started</a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -41,6 +765,13 @@
     fetch('/Map/GetStationsJson')
         .then(response => response.json())
         .then(stations => {
+            // Calculate live network stats
+            const totalStations = stations.length;
+            const totalAvailableSlots = stations.reduce((sum, s) => sum + s.availableSlots, 0);
+            
+            document.getElementById('statsStationCount').innerText = `${totalStations} Stations`;
+            document.getElementById('statsSlotCount').innerText = `${totalAvailableSlots} Slots`;
+
             stations.forEach(station => {
 
                 
@@ -68,4 +799,78 @@
             });
         })
         .catch(err => console.error("Fetch Stations Error:", err));
+
+    // Active Booking Countdown
+    let countdownInterval = null;
+
+    function hideBookingWidget() {
+        document.getElementById('activeBookingWidget').classList.add('d-none');
+        if (countdownInterval) clearInterval(countdownInterval);
+    }
+
+    function initBookingCountdown() {
+        fetch('/Map/GetActiveBookingJson')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.hasBooking) return;
+
+                document.getElementById('widgetStationName').innerText = data.stationName;
+                document.getElementById('widgetSlotNumber').innerText = data.slotNumber;
+                document.getElementById('activeBookingWidget').classList.remove('d-none');
+
+                const serverOffset = new Date(data.serverTime).getTime() - Date.now();
+                const startTime = new Date(data.startTime).getTime();
+                const endTime = new Date(data.endTime).getTime();
+
+                const updateTimer = () => {
+                    const adjustedNow = Date.now() + serverOffset;
+
+                    let targetTime, label, badgeText, badgeClass, iconClass;
+                    let isSessionActive = false;
+
+                    if (adjustedNow < startTime) {
+                        targetTime = startTime;
+                        label = "Starts in";
+                        badgeText = "Upcoming Session";
+                        badgeClass = "bg-emerald-gradient text-white";
+                        iconClass = "bi bi-hourglass-split text-emerald";
+                    } else if (adjustedNow >= startTime && adjustedNow <= endTime) {
+                        targetTime = endTime;
+                        label = "Time Remaining";
+                        badgeText = "Charging Active";
+                        badgeClass = "bg-warning text-dark";
+                        iconClass = "bi bi-lightning-charge-fill text-warning pulse-icon";
+                        isSessionActive = true;
+                    } else {
+                        // Finished
+                        hideBookingWidget();
+                        location.reload(); // Refresh to update slot statuses on map
+                        return;
+                    }
+
+                    const diff = targetTime - adjustedNow;
+                    const hours = Math.floor(diff / 3600000);
+                    const minutes = Math.floor((diff % 3600000) / 60000);
+                    const seconds = Math.floor((diff % 60000) / 1000);
+
+                    const pad = (num) => String(num).padStart(2, '0');
+                    document.getElementById('widgetCountdown').innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+                    document.getElementById('widgetTimerLabel').innerText = label;
+                    
+                    const badge = document.getElementById('widgetStatusBadge');
+                    badge.innerText = badgeText;
+                    badge.className = `badge ${badgeClass} text-uppercase tracking-wider small fw-bold`;
+
+                    const icon = document.getElementById('widgetTimerIcon');
+                    icon.className = iconClass;
+                };
+
+                updateTimer();
+                countdownInterval = setInterval(updateTimer, 1000);
+            })
+            .catch(err => console.error("Countdown error:", err));
+    }
+
+    // Initialize on load
+    document.addEventListener("DOMContentLoaded", initBookingCountdown);
 </script>

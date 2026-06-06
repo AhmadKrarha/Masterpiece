@@ -1,0 +1,61 @@
+/* --- SECTION 1: Layout Wrapper Overrides --- */
+/* Ensures no horizontal scrollbars appear while the sidebar sits off-screen */
+.overflow-hidden {
+    overflow-x: hidden !important;
+}
+
+/* --- SECTION 2: Smooth Motion Mechanics --- */
+/* Sets up the core transition curves for both columns */
+.transition-container {
+    transition: all 0.4s ease-in-out;
+    width: 100%;
+}
+
+.transition-pane {
+    transition: all 0.4s ease-in-out;
+}
+
+/* --- SECTION 3: The Off-Screen Sidebar Strategy --- */
+/* Positions the checkout panel entirely past the right edge of the browser */
+#stripeSidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    z-index: 1050;
+    width: 480px; /* Increased from 400px to accommodate larger button text and wide layouts */
+    max-width: 100%;
+    transform: translateX(100%); /* Hidden by default */
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15) !important;
+    overflow-y: auto; /* Allow scrolling if screen height is small */
+}
+
+/* --- SECTION 4: The Slide-In Trigger --- */
+/* When this class is appended to the body or container via JS, the sidebar slides out */
+.show-sidebar #stripeSidebar {
+    transform: translateX(0);
+}
+
+/* Desktop layout adjustment: Shrinks the main form space to accommodate the incoming panel */
+@media (min-width: 992px) {
+    .show-sidebar #mainFormContainer {
+        width: calc(100% - 500px) !important; /* 480px sidebar + 20px dynamic gutter */
+        flex: 0 0 auto;
+    }
+}
+
+/* --- SECTION 5: Stripe Element Beautiful Input Polish --- */
+/* Custom styling to make Stripe's iframe card input look identical to native Bootstrap fields */
+#stripeCardElement {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 12px 16px; /* Added internal padding so the Stripe input is larger and more readable */
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#stripeCardElement--focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+}

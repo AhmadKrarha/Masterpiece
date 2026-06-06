@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Owner Dashboard</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-bg: #1a1d21;
+            --sidebar-hover: #2c3034;
+            --sidebar-active: #0d6efd;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .dashboard-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            z-index: 1040;
+            padding-top: 0;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .dashboard-sidebar .sidebar-brand {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-sidebar .sidebar-brand h5 {
+            color: #fff;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-sidebar .sidebar-brand small {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+        }
+
+        .dashboard-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.65);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            border-radius: 0;
+            transition: all 0.2s ease;
+        }
+
+        .dashboard-sidebar .nav-link:hover {
+            color: #fff;
+            background-color: var(--sidebar-hover);
+        }
+
+        .dashboard-sidebar .nav-link.active {
+            color: #fff;
+            background-color: var(--sidebar-active);
+        }
+
+        .dashboard-sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .dashboard-topbar {
+            margin-left: var(--sidebar-width);
+            height: 60px;
+            background-color: #fff;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        .dashboard-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: calc(100vh - 60px);
+            background-color: #f4f6f9;
+        }
+
+        .sidebar-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin: 0.75rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="dashboard-sidebar">
+        <div class="sidebar-brand">
+            <h5><i class="bi bi-ev-station me-2"></i>Owner Panel</h5>
+            <small>Materpiece Platform</small>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Admin" asp-controller="Stations" asp-action="Index">
+                    <i class="bi bi-building"></i> My Stations
+                </a>
+            </li>
+            <div class="sidebar-divider"></div>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-arrow-left-circle"></i> Back to Site
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Top Navbar -->
+    <div class="dashboard-topbar shadow-sm">
+        <h5 class="mb-0 fw-semibold text-dark">@ViewData["Title"]</h5>
+        <div class="navbar navbar-expand p-0">
+            <partial name="_LoginPartial" />
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="dashboard-content">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

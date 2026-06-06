@@ -1,4 +1,4 @@
-﻿using Materpiece.Data;
+using Materpiece.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +7,7 @@ using Materpiece.Areas.Admin.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Materpiece.Models;
 using System.Reflection;
-using Materpiece.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 
 namespace Materpiece.Areas.Admin.Controllers
@@ -30,9 +30,17 @@ namespace Materpiece.Areas.Admin.Controllers
         {
             // Get the logged-in User's ID (OwnerId)
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOwner = await _context.Stations.AnyAsync(s => s.OwnerId == userId);
+
+            // Access Gate: If they are neither Admin nor Station Owner, block them!
+            if (!isAdmin && !isOwner)
+            {
+                return RedirectToAction("AccessDenied", "Home", new { area = "" });
+            }
 
             // Owners only see their own stations; Admins can see everything
-            if (User.IsInRole("Admin"))
+            if (isAdmin)
             {
                 var allStations = await _context.Stations.ToListAsync();
                 return View(allStations);
@@ -47,9 +55,15 @@ namespace Materpiece.Areas.Admin.Controllers
 
         // GET: /Admin/Stations/Create
         [HttpGet]
-        public IActionResult Create()
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create()
         {
-            return View();
+            var users = await _userManager.Users.ToListAsync();
+            var model = new CreateStationViewModel
+            {
+                UsersList = new SelectList(users, "Id", "Email")
+            };
+            return View(model);
         }
 
         // POST: /Admin/Stations/Create
@@ -73,7 +87,7 @@ namespace Materpiece.Areas.Admin.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!User.IsInRole("Admin") && station.OwnerId != userId)
             {
-                return Unauthorized();
+                return RedirectToAction("AccessDenied", "Home", new { area = "" });
             }
 
             return View(station);
@@ -99,7 +113,7 @@ namespace Materpiece.Areas.Admin.Controllers
             }
             if (!User.IsInRole("Admin") && existingStation.OwnerId != userId)
             {
-                return Unauthorized();
+                return RedirectToAction("AccessDenied", "Home", new { area = "" });
             }
 
             // Reassign correct owner to prevent tampering
@@ -135,6 +149,8 @@ namespace Materpiece.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid)
             {
+                var usersForValidation = await _userManager.Users.ToListAsync();
+                model.UsersList = new SelectList(usersForValidation, "Id", "Email");
                 return View(model);
             }
 
@@ -158,7 +174,7 @@ namespace Materpiece.Areas.Admin.Controllers
                             Latitude = model.Latitude,
                             Longitude = model.Longitude,
                             Description = model.Description,
-                            OwnerId = currentUserId,
+                            OwnerId = model.SelectedOwnerId,
                             TotalSlots = model.NormalAcSlotsCount + model.FastDcSlotsCount
                         };
 
@@ -205,6 +221,8 @@ namespace Materpiece.Areas.Admin.Controllers
             {
                 // Log the exception details here
                 ModelState.AddModelError("", "An error occurred while creating the station and generating slots. Please try again.");
+                var usersForError = await _userManager.Users.ToListAsync();
+                model.UsersList = new SelectList(usersForError, "Id", "Email");
                 return View(model);
             }
         }
@@ -223,10 +241,30 @@ namespace Materpiece.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            // Calculate real-time aggregate stats for the UX display
+            var now = DateTime.Now;
+
+            // Calculate real-time aggregate stats for the UX display (subtracting active bookings)
             ViewBag.AverageRating = station.Reviews.Any() ? station.Reviews.Average(r => r.Rating) : 0.0;
-            ViewBag.AvailableAc = station.ChargerSlots.Count(s => s.Type == ChargerType.NormalAC && s.Status == SlotStatus.Available);
-            ViewBag.AvailableDc = station.ChargerSlots.Count(s => s.Type == ChargerType.FastDC && s.Status == SlotStatus.Available);
+            
+            ViewBag.AvailableAc = station.ChargerSlots.Count(s => 
+                s.Type == ChargerType.NormalAC && 
+                s.Status == SlotStatus.Available &&
+                !_context.Bookings.Any(b => 
+                    b.SlotId == s.SlotId && 
+                    (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending) &&
+                    now >= b.StartTime && 
+                    now <= b.EndTime)
+            );
+            
+            ViewBag.AvailableDc = station.ChargerSlots.Count(s => 
+                s.Type == ChargerType.FastDC && 
+                s.Status == SlotStatus.Available &&
+                !_context.Bookings.Any(b => 
+                    b.SlotId == s.SlotId && 
+                    (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending) &&
+                    now >= b.StartTime && 
+                    now <= b.EndTime)
+            );
 
             return View(station);
         }
@@ -237,6 +275,7 @@ namespace Materpiece.Areas.Admin.Controllers
             // Fetch the station and its slots directly
             var station = await _context.Stations
                 .Include(s => s.ChargerSlots)
+                .Include(s => s.Reviews)
                 .FirstOrDefaultAsync(s => s.StationId == id);
 
             if (station == null)
@@ -244,8 +283,118 @@ namespace Materpiece.Areas.Admin.Controllers
                 return NotFound();
             }
 
+            var now = DateTime.Now;
+            var slotStatuses = new Dictionary<int, string>();
+
+            foreach (var slot in station.ChargerSlots)
+            {
+                if (slot.Status == SlotStatus.Maintenance)
+                {
+                    slotStatuses[slot.SlotId] = "Maintenance";
+                    continue;
+                }
+
+                // Check if there is an active booking right now (Confirmed or Pending)
+                var activeBooking = await _context.Bookings
+                    .FirstOrDefaultAsync(b => b.SlotId == slot.SlotId &&
+                                              (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending) &&
+                                              now >= b.StartTime && now <= b.EndTime);
+
+                if (activeBooking != null)
+                {
+                    if (activeBooking.Status == BookingStatus.Confirmed)
+                    {
+                        slotStatuses[slot.SlotId] = "Reserved";
+                    }
+                    else if (activeBooking.Status == BookingStatus.Pending)
+                    {
+                        slotStatuses[slot.SlotId] = "Pending";
+                    }
+                }
+                else
+                {
+                    slotStatuses[slot.SlotId] = slot.Status == SlotStatus.Occupied ? "Occupied" : "Available";
+                }
+            }
+
+            ViewBag.SlotStatuses = slotStatuses;
+
+            // Prepare Review User Names mapping
+            var reviewerIds = station.Reviews.Select(r => r.UserId).Distinct().ToList();
+            var reviewerNames = new Dictionary<string, string>();
+            foreach (var rId in reviewerIds)
+            {
+                var user = await _userManager.FindByIdAsync(rId);
+                reviewerNames[rId] = user != null && !string.IsNullOrEmpty(user.Email) ? user.Email.Split('@')[0] : "EV Driver";
+            }
+            ViewBag.ReviewerNames = reviewerNames;
+
             // Pass the core Station model straight to the partial view
             return PartialView("_StationSidebarPartial", station);
+        }
+
+        // POST: /Admin/Stations/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var station = await _context.Stations.FirstOrDefaultAsync(s => s.StationId == id);
+            if (station == null)
+            {
+                return Json(new { success = false, message = "Station not found." });
+            }
+
+            // Security check: only Admin or owner can delete
+            if (!User.IsInRole("Admin") && station.OwnerId != userId)
+            {
+                return Json(new { success = false, message = "You do not have permission to delete this station." });
+            }
+
+            var strategy = _context.Database.CreateExecutionStrategy();
+            bool isDeleted = false;
+
+            await strategy.ExecuteAsync(async () =>
+            {
+                using (var transaction = await _context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        // 1. Delete Reviews associated with this station
+                        var reviews = await _context.Reviews.Where(r => r.StationId == id).ToListAsync();
+                        _context.Reviews.RemoveRange(reviews);
+
+                        // 2. Delete Payments & Bookings associated with this station's slots
+                        var slots = await _context.ChargerSlots.Where(cs => cs.StationId == id).ToListAsync();
+                        var slotIds = slots.Select(cs => cs.SlotId).ToList();
+
+                        var bookings = await _context.Bookings.Where(b => slotIds.Contains(b.SlotId)).ToListAsync();
+                        var bookingIds = bookings.Select(b => b.BookingId).ToList();
+
+                        var payments = await _context.Payments.Where(p => bookingIds.Contains(p.BookingId)).ToListAsync();
+                        
+                        _context.Payments.RemoveRange(payments);
+                        _context.Bookings.RemoveRange(bookings);
+                        _context.ChargerSlots.RemoveRange(slots);
+                        _context.Stations.Remove(station);
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                        isDeleted = true;
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                    }
+                }
+            });
+
+            if (isDeleted)
+            {
+                return Json(new { success = true, message = "Station and all associated charging slots deleted successfully!" });
+            }
+
+            return Json(new { success = false, message = "An error occurred while deleting the station." });
         }
     }
 }

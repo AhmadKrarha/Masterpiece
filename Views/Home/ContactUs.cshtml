@@ -1,0 +1,421 @@
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+    .contact-page {
+        font-family: 'Outfit', sans-serif;
+        color: #0f172a;
+    }
+
+    /* ── Hero ── */
+    .contact-hero {
+        background: radial-gradient(circle at top right, #252a34, #0f172a);
+        border-radius: 32px;
+        color: #fff;
+        padding: 3.5rem 3rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.05);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 3rem;
+    }
+
+    .contact-hero::before {
+        content: '';
+        position: absolute;
+        top: -80px; right: -80px;
+        width: 280px; height: 280px;
+        background: radial-gradient(circle, rgba(16,185,129,0.15), transparent 70%);
+        border-radius: 50%;
+    }
+
+    .contact-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(16,185,129,0.12);
+        border: 1px solid rgba(16,185,129,0.25);
+        color: #10b981;
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+    }
+
+    .contact-hero h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        letter-spacing: -0.75px;
+        margin-bottom: 0.75rem;
+    }
+
+    .contact-hero h1 span {
+        background: linear-gradient(135deg, #10b981, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .contact-hero p {
+        color: rgba(255,255,255,0.6);
+        font-size: 1.05rem;
+        line-height: 1.6;
+        max-width: 500px;
+        margin: 0;
+    }
+
+    /* ── Form Card ── */
+    .contact-form-card {
+        background: rgba(255,255,255,0.97);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: 28px;
+        padding: 2.5rem;
+        box-shadow: 0 20px 40px rgba(15,23,42,0.06);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .contact-form-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 25px 50px rgba(15,23,42,0.08);
+    }
+
+    .contact-form-card h3 {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.25rem;
+    }
+
+    .contact-form-card .form-subtitle {
+        color: #64748b;
+        font-size: 0.92rem;
+        margin-bottom: 1.75rem;
+    }
+
+    /* ── Form Inputs (matching identity.css style) ── */
+    .contact-form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .contact-form-group label {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #475569;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .contact-input {
+        width: 100%;
+        background-color: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        color: #0f172a;
+        font-weight: 500;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        padding: 0.85rem 1rem;
+        transition: all 0.2s ease;
+        outline: none;
+    }
+
+    .contact-input:focus {
+        background-color: #ffffff;
+        border-color: #10b981;
+        box-shadow: 0 0 0 4px rgba(16,185,129,0.15);
+    }
+
+    textarea.contact-input {
+        resize: vertical;
+        min-height: 130px;
+    }
+
+    /* ── Submit Button ── */
+    .contact-submit-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        border: none;
+        border-radius: 16px;
+        color: #ffffff;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        margin-top: 0.75rem;
+        box-shadow: 0 8px 25px rgba(16,185,129,0.25);
+        transition: all 0.25s ease;
+        cursor: pointer;
+    }
+
+    .contact-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(16,185,129,0.35);
+    }
+
+    .contact-submit-btn:active {
+        transform: translateY(0);
+    }
+
+    /* ── Info Cards ── */
+    .info-card {
+        background: rgba(255,255,255,0.97);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: 22px;
+        padding: 1.5rem 1.5rem;
+        box-shadow: 0 4px 20px rgba(15,23,42,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(15,23,42,0.09), 0 0 0 1px rgba(16,185,129,0.15);
+    }
+
+    .info-icon {
+        width: 48px; height: 48px;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.12));
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .info-card-content h5 {
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.2rem;
+    }
+
+    .info-card-content p, .info-card-content a {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 0.95rem;
+        margin: 0;
+        text-decoration: none;
+    }
+
+    .info-card-content a:hover {
+        color: #10b981;
+    }
+
+    /* ── Social Links ── */
+    .social-card {
+        background: rgba(255,255,255,0.97);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: 22px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(15,23,42,0.05);
+        margin-top: 1rem;
+    }
+
+    .social-card h5 {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 12px;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        border: 1px solid transparent;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .social-btn.instagram {
+        background: rgba(225,48,108,0.08);
+        border-color: rgba(225,48,108,0.2);
+        color: #e1306c;
+    }
+
+    .social-btn.instagram:hover {
+        background: #e1306c;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(225,48,108,0.3);
+    }
+
+    .social-btn.twitter-x {
+        background: rgba(15,15,15,0.06);
+        border-color: rgba(15,15,15,0.15);
+        color: #0f0f0f;
+    }
+
+    .social-btn.twitter-x:hover {
+        background: #0f0f0f;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15,15,15,0.25);
+    }
+
+    .social-btn.github {
+        background: rgba(51,51,51,0.06);
+        border-color: rgba(51,51,51,0.15);
+        color: #333;
+    }
+
+    .social-btn.github:hover {
+        background: #333;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(51,51,51,0.25);
+    }
+</style>
+
+<div class="contact-page">
+    <div class="container mt-4">
+
+        <!-- ── HERO ─────────────────────────────────────── -->
+        <div class="contact-hero">
+            <div class="contact-hero-badge">💬 Get in Touch</div>
+            <h1>We'd love to <span>hear from you</span></h1>
+            <p>Have a question, suggestion, or partnership request? Drop us a message and we'll get back to you as soon as possible.</p>
+        </div>
+
+        <!-- ── MAIN CONTENT ───────────────────────────── -->
+        <div class="row g-4 mb-5">
+
+            <!-- Left: Contact Form -->
+            <div class="col-lg-7">
+                <div class="contact-form-card">
+                    <h3>Send us a Message</h3>
+                    <p class="form-subtitle">Fill out the form below and we'll respond within 24 hours.</p>
+
+                    <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="contact-form-group">
+                                    <label for="contactName">Full Name</label>
+                                    <input type="text" id="contactName" class="contact-input" placeholder="Ahmad Krarha" required />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="contact-form-group">
+                                    <label for="contactEmail">Email Address</label>
+                                    <input type="email" id="contactEmail" class="contact-input" placeholder="you@@example.com" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="contact-form-group">
+                            <label for="contactSubject">Subject</label>
+                            <input type="text" id="contactSubject" class="contact-input" placeholder="e.g. Station partnership inquiry" required />
+                        </div>
+
+                        <div class="contact-form-group">
+                            <label for="contactMessage">Your Message</label>
+                            <textarea id="contactMessage" class="contact-input" placeholder="Tell us more about your inquiry..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="contact-submit-btn">
+                            ⚡ Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Info + Socials -->
+            <div class="col-lg-5">
+                <div class="info-card">
+                    <div class="info-icon">📍</div>
+                    <div class="info-card-content">
+                        <h5>Location</h5>
+                        <p>Amman, Jordan</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">📧</div>
+                    <div class="info-card-content">
+                        <h5>Email</h5>
+                        <a href="mailto:Ahmadkrarha@gmail.com">Ahmadkrarha@gmail.com</a>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">📞</div>
+                    <div class="info-card-content">
+                        <h5>Phone</h5>
+                        <a href="tel:+962780976759">+962 780 976 759</a>
+                    </div>
+                </div>
+
+                <div class="social-card">
+                    <h5>Follow us on</h5>
+                    <div class="social-links flex-wrap">
+                        <a href="https://instagram.com" target="_blank" class="social-btn instagram">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                            Instagram
+                        </a>
+                        <a href="https://x.com" target="_blank" class="social-btn twitter-x">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            X (Twitter)
+                        </a>
+                        <a href="https://github.com/AhmadKrarha" target="_blank" class="social-btn github">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function handleContactSubmit(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('contactName').value.trim();
+
+        Swal.fire({
+            icon: 'success',
+            title: '⚡ Message Sent!',
+            html: `Thank you, <strong>${name}</strong>!<br>We'll get back to you within 24 hours.`,
+            confirmButtonText: 'Awesome!',
+            confirmButtonColor: '#10b981',
+            background: '#fff',
+            color: '#0f172a',
+            iconColor: '#10b981',
+            customClass: {
+                popup: 'rounded-4',
+                confirmButton: 'fw-bold'
+            }
+        }).then(() => {
+            document.getElementById('contactForm').reset();
+        });
+    }
+</script>

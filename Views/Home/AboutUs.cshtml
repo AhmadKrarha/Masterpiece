@@ -1,0 +1,388 @@
+@{
+    ViewData["Title"] = "About Us";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+    .about-page {
+        font-family: 'Outfit', sans-serif;
+        color: #0f172a;
+    }
+
+    /* ── Hero ── */
+    .about-hero {
+        background: radial-gradient(circle at top right, #252a34, #0f172a);
+        border-radius: 32px;
+        color: #fff;
+        padding: 4rem 3rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .about-hero::before {
+        content: '';
+        position: absolute;
+        top: -80px; right: -80px;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(16,185,129,0.15), transparent 70%);
+        border-radius: 50%;
+    }
+
+    .about-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -60px; left: -60px;
+        width: 220px; height: 220px;
+        background: radial-gradient(circle, rgba(6,182,212,0.12), transparent 70%);
+        border-radius: 50%;
+    }
+
+    .about-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(16,185,129,0.12);
+        border: 1px solid rgba(16,185,129,0.25);
+        color: #10b981;
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+    }
+
+    .about-hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -1px;
+        margin-bottom: 1rem;
+    }
+
+    .about-hero h1 span {
+        background: linear-gradient(135deg, #10b981, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .about-hero p {
+        color: rgba(255,255,255,0.65);
+        font-size: 1.1rem;
+        line-height: 1.7;
+        max-width: 560px;
+    }
+
+    .hero-bolt {
+        font-size: 6rem;
+        line-height: 1;
+        filter: drop-shadow(0 0 24px rgba(16,185,129,0.5));
+        animation: boltPulse 2s ease-in-out infinite;
+    }
+
+    @@keyframes boltPulse {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 18px rgba(16,185,129,0.5)); }
+        50% { transform: scale(1.08); filter: drop-shadow(0 0 32px rgba(6,182,212,0.7)); }
+    }
+
+    /* ── Section headings ── */
+    .section-eyebrow {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #10b981;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-heading {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.75rem;
+    }
+
+    .section-sub {
+        color: #64748b;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    /* ── Stats Strip ── */
+    .stats-strip {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: 28px;
+        box-shadow: 0 8px 32px rgba(15,23,42,0.06);
+        padding: 2.5rem 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        border-right: 1px solid #e2e8f0;
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #10b981, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    /* ── Value Cards ── */
+    .value-card {
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: 24px;
+        padding: 2rem 1.75rem;
+        box-shadow: 0 4px 20px rgba(15,23,42,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+
+    .value-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(15,23,42,0.1), 0 0 0 1px rgba(16,185,129,0.15);
+    }
+
+    .value-icon {
+        width: 54px; height: 54px;
+        background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.12));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+    }
+
+    .value-card h4 {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+
+    .value-card p {
+        color: #64748b;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* ── Mission Block ── */
+    .mission-block {
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: 28px;
+        padding: 3rem;
+        box-shadow: 0 8px 32px rgba(15,23,42,0.05);
+    }
+
+    .mission-block blockquote {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: #0f172a;
+        border-left: 4px solid #10b981;
+        padding-left: 1.5rem;
+        margin: 0 0 1.5rem;
+        line-height: 1.6;
+    }
+
+    /* ── Team Card ── */
+    .team-card {
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(16,185,129,0.12);
+        border-radius: 28px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 8px 32px rgba(15,23,42,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-align: center;
+        max-width: 340px;
+        margin: 0 auto;
+    }
+
+    .team-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 25px 50px rgba(15,23,42,0.08), 0 0 0 1px rgba(16,185,129,0.15);
+    }
+
+    .team-avatar {
+        width: 90px; height: 90px;
+        background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.4rem;
+        color: #fff;
+        margin: 0 auto 1.25rem;
+        box-shadow: 0 8px 25px rgba(16,185,129,0.3);
+    }
+
+    .team-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.25rem;
+    }
+
+    .team-role {
+        color: #10b981;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .team-bio {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+
+    .team-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.1));
+        border: 1px solid rgba(16,185,129,0.2);
+        color: #0f172a;
+        padding: 4px 12px;
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin: 2px;
+    }
+</style>
+
+<div class="about-page">
+    <div class="container mt-4">
+
+        <!-- ── HERO ─────────────────────────────────────── -->
+        <div class="about-hero mb-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="about-hero-badge">⚡ Our Story</div>
+                    <h1>Powering Jordan's <span>Electric Future</span></h1>
+                    <p>We're building the infrastructure that makes EV ownership effortless — one charging station at a time. Real-time availability, instant booking, zero range anxiety.</p>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <div class="hero-bolt">⚡</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── STATS STRIP ────────────────────────────── -->
+        <div class="stats-strip mb-5">
+            <div class="row g-0">
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Charging Stations</div>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">1K+</div>
+                    <div class="stat-label">Successful Bookings</div>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Cities Covered</div>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Platform Availability</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── MISSION ────────────────────────────────── -->
+        <div class="row mb-5">
+            <div class="col-lg-5 mb-4 mb-lg-0">
+                <div class="section-eyebrow">Our Mission</div>
+                <h2 class="section-heading">Why we built<br>Your EV Solution</h2>
+                <p class="section-sub">Jordan's EV adoption is accelerating. But finding a charging slot, knowing if it's actually available, and booking it — that was still broken. We set out to fix that.</p>
+            </div>
+            <div class="col-lg-7">
+                <div class="mission-block">
+                    <blockquote>"Every EV driver deserves to know exactly where to charge — before they run out."</blockquote>
+                    <p style="color:#64748b; line-height:1.7;">Your EV Solution was born as a final-year engineering project with one clear goal: make EV charging in Jordan as simple as tapping a button. We built a platform where station owners publish real-time slot availability, and drivers can browse, book, and show up confident. No guesswork. No empty drives.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── VALUES ────────────────────────────────── -->
+        <div class="mb-5">
+            <div class="text-center mb-4">
+                <div class="section-eyebrow">What we stand for</div>
+                <h2 class="section-heading">Our Core Values</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="value-card">
+                        <div class="value-icon">⚡</div>
+                        <h4>Innovation First</h4>
+                        <p>We leverage real-time mapping, live slot tracking, and smart booking systems to stay ahead of the curve in clean mobility tech.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="value-card">
+                        <div class="value-icon">🌿</div>
+                        <h4>Built for Sustainability</h4>
+                        <p>Every feature we ship is designed to reduce range anxiety, increase EV adoption, and ultimately lower carbon emissions across Jordan.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="value-card">
+                        <div class="value-icon">🤝</div>
+                        <h4>Community Driven</h4>
+                        <p>Station owners, EV drivers, and administrators all work together on our platform — connected through transparency and shared goals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TEAM ───────────────────────────────────── -->
+        <div class="mb-5">
+            <div class="text-center mb-4">
+                <div class="section-eyebrow">The Builder</div>
+                <h2 class="section-heading">Meet the Team</h2>
+                <p class="section-sub">The mind and code behind Your EV Solution.</p>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-md-5">
+                    <div class="team-card">
+                        <div class="team-avatar">👨‍💻</div>
+                        <div class="team-name">Eng. Ahmad Krarha</div>
+                        <div class="team-role">Founder &amp; Full-Stack Engineer</div>
+                        <p class="team-bio">Designed and built the entire Your EV Solution platform — from real-time station mapping and booking logic to the UI/UX and backend infrastructure.</p>
+                        <div>
+                            <span class="team-badge">ASP.NET Core</span>
+                            <span class="team-badge">Leaflet Maps</span>
+                            <span class="team-badge">SQL Server</span>
+                            <span class="team-badge">UI/UX</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

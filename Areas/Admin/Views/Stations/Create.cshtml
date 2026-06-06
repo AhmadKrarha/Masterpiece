@@ -1,4 +1,4 @@
-﻿@model Materpiece.Areas.Admin.ViewModels.CreateStationViewModel
+@model Materpiece.Areas.Admin.ViewModels.CreateStationViewModel
 @{
     ViewData["Title"] = "Add New Charging Station";
 }
@@ -6,84 +6,175 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+
+    .glass-admin-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(16, 185, 129, 0.12);
+        border-radius: 28px;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.04);
+        padding: 2.5rem;
+    }
+
+    .admin-card-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #fff;
+        border-radius: 20px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border-bottom: 4px solid #10b981;
+    }
+
+    .input-custom-brand {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        padding: 0.8rem 1rem !important;
+        transition: all 0.2s ease !important;
+        font-weight: 500;
+    }
+
+    .input-custom-brand:focus {
+        background-color: #ffffff !important;
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
+    }
+
+    select.input-custom-brand {
+        padding: 0.8rem 1rem !important;
+        height: auto !important;
+    }
+
+    .btn-brand-gradient {
+        background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        border: none;
+        border-radius: 14px;
+        color: #fff;
+        font-weight: 700;
+        padding: 0.9rem 2rem;
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+        transition: all 0.25s ease;
+        cursor: pointer;
+    }
+
+    .btn-brand-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(16, 185, 129, 0.3);
+        color: #fff;
+    }
+
+    .btn-brand-gradient:active {
+        transform: translateY(0);
+    }
+
+    .btn-custom-cancel {
+        border-radius: 14px;
+        padding: 0.9rem 2rem;
+        font-weight: 600;
+        transition: all 0.25s ease;
+    }
+
+    #stationMap {
+        border: 2px solid rgba(16, 185, 129, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+</style>
+
 <div class="container mt-4 mb-5">
     <div class="row">
         <div class="col-md-8 mx-auto">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Register New Charging Station</h4>
+            <div class="admin-card-header shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <span class="text-white-50 text-uppercase small tracking-wider fw-bold">Admin Hub</span>
+                    <h4 class="text-white fw-bold mb-0 mt-1">Register New Charging Station</h4>
                 </div>
-                <div class="card-body">
-                    <form asp-area="Admin" asp-controller="Stations" asp-action="Create" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <span class="fs-4 text-emerald">⚡</span>
+            </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label fw-bold">Station Name</label>
-                            <input asp-for="Name" class="form-label form-control" placeholder="e.g., Amman Hub Fast Charger" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+            <div class="glass-admin-card shadow-sm">
+                <form asp-area="Admin" asp-controller="Stations" asp-action="Create" method="post" autocomplete="off">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="SelectedOwnerId" class="form-label fw-bold text-secondary small">Assign Station Owner</label>
+                        <select asp-for="SelectedOwnerId" asp-items="Model.UsersList" class="form-select input-custom-brand">
+                            <option value="">-- Select an Owner --</option>
+                        </select>
+                        <span asp-validation-for="SelectedOwnerId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-bold text-secondary small">Station Name</label>
+                        <input asp-for="Name" class="form-control input-custom-brand" placeholder="e.g., Amman Hub Fast Charger" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label fw-bold text-secondary small">Street Address</label>
+                        <input asp-for="Address" class="form-control input-custom-brand" placeholder="e.g., King Abdullah II St, Amman" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-bold text-secondary small">Description / Instructions</label>
+                        <textarea asp-for="Description" class="form-control input-custom-brand" rows="3" placeholder="Provide parking details or access instructions..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="NormalAcSlotsCount" class="form-label fw-bold text-secondary small">Normal AC Slots</label>
+                                <input asp-for="NormalAcSlotsCount" type="number" class="form-control input-custom-brand" min="0" value="0" />
+                                <span asp-validation-for="NormalAcSlotsCount" class="text-danger"></span>
+                            </div>
                         </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Address" class="form-label fw-bold">Street Address</label>
-                            <input asp-for="Address" class="form-control" placeholder="e.g., King Abdullah II St, Amman" />
-                            <span asp-validation-for="Address" class="text-danger"></span>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="FastDcSlotsCount" class="form-label fw-bold text-secondary small">Fast DC Slots</label>
+                                <input asp-for="FastDcSlotsCount" type="number" class="form-control input-custom-brand" min="0" value="0" />
+                                <span asp-validation-for="FastDcSlotsCount" class="text-danger"></span>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label fw-bold">Description / Instructions</label>
-                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Provide parking details or access instructions..."></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-emerald small">Pin Location on Map</label>
+                        <p class="text-muted small">Click anywhere on the map below to pinpoint your charging station's exact coordinates.</p>
 
-                        <div class="row">
+                        <div id="stationMap" style="height: 350px; width: 100%;" class="mb-3"></div>
+
+                        <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="NormalAcSlotsCount" class="control-label"></label>
-                                    <input asp-for="NormalAcSlotsCount" type="number" class="form-control" min="0" value="0" />
-                                    <span asp-validation-for="NormalAcSlotsCount" class="text-danger"></span>
-                                </div>
+                                <label asp-for="Latitude" class="form-label small text-muted">Latitude</label>
+                                <input asp-for="Latitude" id="latInput" class="form-control input-custom-brand bg-light" readonly placeholder="Click map to auto-fill" />
+                                <span asp-validation-for="Latitude" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label asp-for="FastDcSlotsCount" class="control-label"></label>
-                                    <input asp-for="FastDcSlotsCount" type="number" class="form-control" min="0" value="0" />
-                                    <span asp-validation-for="FastDcSlotsCount" class="text-danger"></span>
-                                </div>
+                                <label asp-for="Longitude" class="form-label small text-muted">Longitude</label>
+                                <input asp-for="Longitude" id="lngInput" class="form-control input-custom-brand bg-light" readonly placeholder="Click map to auto-fill" />
+                                <span asp-validation-for="Longitude" class="text-danger"></span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-success">Pin Location on Map</label>
-                            <p class="text-muted small">Click anywhere on the map below to pinpoint your charging station's exact coordinates.</p>
+                    <hr class="my-4 text-muted opacity-25">
 
-                            <div id="stationMap" style="height: 350px; width: 100%;" class="rounded border border-secondary shadow-sm mb-3"></div>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label asp-for="Latitude" class="form-label small text-muted">Latitude</label>
-                                    <input asp-for="Latitude" id="latInput" class="form-control bg-light" readonly placeholder="Click map to auto-fill" />
-                                    <span asp-validation-for="Latitude" class="text-danger"></span>
-                                </div>
-                                <div class="col-md-6">
-                                    <label asp-for="Longitude" class="form-label small text-muted">Longitude</label>
-                                    <input asp-for="Longitude" id="lngInput" class="form-control bg-light" readonly placeholder="Click map to auto-fill" />
-                                    <span asp-validation-for="Longitude" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <div class="d-flex justify-content-between">
-                            <a asp-area="Admin" asp-controller="Stations" asp-action="Index" class="btn btn-outline-secondary">
-                                Cancel
-                            </a>
-                            <button type="submit" class="btn btn-success px-4">
-                                Save Station
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="d-flex justify-content-between">
+                        <a asp-area="Admin" asp-controller="Stations" asp-action="Index" class="btn btn-outline-secondary btn-custom-cancel">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-brand-gradient">
+                            Save Station <i class="bi bi-check-circle-fill ms-1"></i>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

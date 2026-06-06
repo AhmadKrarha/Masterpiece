@@ -1,0 +1,63 @@
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/identity.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+}
+
+<div class="identity-layout-container container py-5">
+    <div class="row align-items-center justify-content-center g-5">
+        <!-- Left Column: The Form Card -->
+        <div class="col-lg-6 d-flex justify-content-center">
+            <div class="identity-form-wrapper w-100">
+                @RenderBody()
+            </div>
+        </div>
+
+        <!-- Right Column: Premium Sustainable Energy Hero Branding -->
+        <div class="col-lg-6 d-none d-lg-flex flex-column align-items-center justify-content-center text-center ps-lg-5">
+            <div class="identity-hero-panel p-5 rounded-4 shadow-sm border border-white position-relative overflow-hidden" 
+                 style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 480px; width: 100%; border-radius: 32px;">
+                
+                <!-- Background decorative glowing blur rings -->
+                <div class="position-absolute" style="width: 250px; height: 250px; background: rgba(16, 185, 129, 0.08); filter: blur(60px); border-radius: 50%; top: -50px; right: -50px; z-index: 1;"></div>
+                <div class="position-absolute" style="width: 200px; height: 200px; background: rgba(6, 182, 212, 0.08); filter: blur(50px); border-radius: 50%; bottom: -50px; left: -50px; z-index: 1;"></div>
+
+                <div class="position-relative" style="z-index: 2;">
+                    <!-- SVG Logo (No clipping on Y-axis) -->
+                    <div class="mb-4">
+                        <svg width="250" height="95" viewBox="0 0 250 95" xmlns="http://www.w3.org/2000/svg" class="img-fluid">
+                          <defs>
+                            <linearGradient id="evGradientHero" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stop-color="#06b6d4" /> 
+                              <stop offset="100%" stop-color="#10b981" /> 
+                            </linearGradient>
+                          </defs>
+                          <path d="M 40 10 C 22.327 10 8 24.327 8 42 C 8 66 40 90 40 90 C 40 90 72 66 72 42 C 72 24.327 57.673 10 40 10 Z" fill="url(#evGradientHero)" />
+                          <path d="M 44 22 L 28 46 L 38 46 L 34 66 L 54 38 L 42 38 Z" fill="#ffffff" />
+                          <text x="85" y="52" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-size="16" font-weight="800" fill="#06b6d4" letter-spacing="2.5" text-transform="uppercase">Your EV Solution</text>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-white fw-bold mb-3" style="font-size: 1.8rem; letter-spacing: -0.5px;">Powering Sustainable Mobility</h3>
+                    <p class="text-white-50 mx-auto" style="max-width: 380px; font-size: 1.05rem; line-height: 1.6; font-weight: 300;">
+                        Join Jordan's premium network of high-efficiency charging stations. Reserve slots, track charging energy, and manage your sustainable operations seamlessly.
+                    </p>
+
+                    <div class="mt-5 d-flex gap-3 justify-content-center">
+                        <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-25 px-3 py-2 rounded-pill small"><i class="bi bi-lightning-charge-fill text-success me-1"></i> Green Energy</span>
+                        <span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-25 px-3 py-2 rounded-pill small"><i class="bi bi-wallet2 text-info me-1"></i> Smart Billing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

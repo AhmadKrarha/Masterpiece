@@ -1,0 +1,369 @@
+@model Materpiece.Models.ViewModels.BookingCheckoutViewModel
+@section Styles {
+    <link rel="stylesheet" href="~/css/checkout.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .checkout-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-bottom: 4px solid #10b981;
+        }
+
+        .glass-checkout-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(16, 185, 129, 0.12);
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .range-slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-kwh-rate {
+            background-color: rgba(6, 182, 212, 0.08);
+            color: #06b6d4;
+            border: 1px solid rgba(6, 182, 212, 0.15);
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .badge-power-kw {
+            background-color: rgba(16, 185, 129, 0.08);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .bg-secondary-brand {
+            background-color: #64748b;
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.35rem 0.75rem;
+        }
+
+        .bg-success-brand {
+            background-color: #10b981;
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.35rem 0.75rem;
+        }
+
+        .text-emerald {
+            color: #10b981 !important;
+        }
+
+        .text-primary-brand {
+            color: #06b6d4 !important;
+        }
+
+        .text-success-brand {
+            color: #10b981 !important;
+        }
+
+        .slider-ev-custom {
+            height: 8px;
+            border-radius: 4px;
+            background: #cbd5e1;
+            outline: none;
+            transition: background 450ms ease-in;
+            -webkit-appearance: none;
+        }
+
+        .slider-ev-custom::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+            transition: transform 0.1s ease;
+        }
+
+        .slider-ev-custom::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            background: #06b6d4;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+        }
+
+        .summary-stats-box {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+
+        .btn-checkout-lock {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            border: none;
+            border-radius: 16px;
+            color: #fff;
+            padding: 1.1rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+            transition: all 0.25s ease;
+        }
+
+        .btn-checkout-lock:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.35);
+            color: #fff;
+        }
+
+        .btn-checkout-lock:active {
+            transform: translateY(0);
+        }
+
+        .input-custom-brand {
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 12px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .input-custom-brand:focus {
+            background-color: #ffffff !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
+        }
+
+        .alert-info-brand {
+            background-color: rgba(6, 182, 212, 0.05);
+            border: 1px solid rgba(6, 182, 212, 0.12);
+            color: #0891b2;
+            border-radius: 14px;
+            padding: 1rem;
+        }
+
+        .warning-ev-battery {
+            background-color: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            color: #b45309;
+            border-radius: 12px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .sticky-summary-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+}
+
+@{
+    ViewData["Title"] = "Book Your EV Charger Slot";
+}
+
+<div class="container-fluid px-lg-5 py-4">
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+        <!-- Main Form Panel -->
+        <div class="col-lg-8" id="mainFormContainer">
+            <div class="checkout-header shadow-sm">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div>
+                        <span class="text-white-50 text-uppercase small tracking-wider fw-bold">EV Reservation Engine</span>
+                        <h1 class="text-white fw-bold mb-1 mt-1">@Model.StationName</h1>
+                        <p class="text-white-50 mb-0"><i class="bi bi-geo-alt-fill me-1"></i> @Model.LocationDescription</p>
+                    </div>
+                    <span class="badge bg-success-brand px-3 py-2 fs-6 shadow-sm">@Model.ConnectorType</span>
+                </div>
+            </div>
+
+            <div class="glass-checkout-card shadow-sm">
+                <form id="bookingDataForm" autocomplete="off">
+                    <input type="hidden" id="chargerSlotId" value="@Model.ChargerSlotId" />
+                    <!-- Hidden inputs for calculations -->
+                    <input type="hidden" id="chargerPowerKw" value="@Model.PowerOutputKw" />
+                    <input type="hidden" id="pricePerKwh" value="@Model.PricePerKwh" />
+
+                    <div class="row g-4">
+                        <!-- Left Side: Inputs & Sliders -->
+                        <div class="col-md-7">
+                            <!-- Step 1: Booking Date & Start Time -->
+                            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-calendar-event me-2 text-emerald"></i>1. Date & Start Time</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Select Booking Date</label>
+                                    <input type="date" id="bookingDate" class="form-control form-control-lg input-custom-brand"
+                                           min="@DateTime.Now.ToString("yyyy-MM-dd")" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold text-secondary">Select Start Time</label>
+                                    <input type="time" id="startTime" class="form-control form-control-lg input-custom-brand" required />
+                                </div>
+                            </div>
+
+                            <hr class="my-4 text-muted opacity-25">
+
+                            <!-- Step 2: Battery Capacities & State of Charge -->
+                            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-ev-front me-2 text-emerald"></i>2. Battery & Charge Configuration</h5>
+                            
+                            <!-- Battery Capacity Input -->
+                            <div class="mb-4">
+                                <div class="range-slider-label">
+                                    <span>Battery Capacity (kWh)</span>
+                                    <span class="badge-power-kw shadow-sm" id="badgeBatteryDisplay">60 kWh</span>
+                                </div>
+                                <input type="range" id="inputBatteryCapacity" class="form-range slider-ev-custom w-100" 
+                                       min="10" max="150" step="1" value="60" />
+                                <small class="text-muted mt-1 d-block">Drag the slider or enter manually in the box: 
+                                    <input type="number" id="inputBatteryCapacityManual" class="form-control form-control-sm d-inline-block text-center ms-1 fw-bold text-emerald input-custom-brand" 
+                                           style="width: 70px;" min="10" max="150" value="60" /> kWh
+                                </small>
+                            </div>
+
+                            <!-- Current Percentage Slider -->
+                            <div class="mb-4">
+                                <div class="range-slider-label">
+                                    <span>Current Battery Charge %</span>
+                                    <span class="badge bg-secondary-brand" id="badgeCurrentChargeDisplay">20%</span>
+                                </div>
+                                <input type="range" id="sliderCurrentCharge" class="form-range slider-ev-custom w-100" 
+                                       min="0" max="95" step="5" value="20" />
+                            </div>
+
+                            <!-- Target Percentage Slider -->
+                            <div class="mb-4">
+                                <div class="range-slider-label">
+                                    <span>Target Battery Charge %</span>
+                                    <span class="badge bg-success-brand" id="badgeTargetChargeDisplay">80%</span>
+                                </div>
+                                <input type="range" id="sliderTargetCharge" class="form-range slider-ev-custom w-100" 
+                                       min="5" max="100" step="5" value="80" />
+                            </div>
+                        </div>
+
+                        <!-- Right Side: Sticky Summary & Action -->
+                        <div class="col-md-5">
+                            <div class="sticky-summary-panel">
+                                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-calculator-fill me-2 text-emerald"></i>3. Summary Estimate</h5>
+
+                                <!-- Live Dynamic Calculation Summary Widget -->
+                                <div class="summary-stats-box mb-4 shadow-sm">
+                                    <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                                        <span class="text-muted small">Energy to Deliver</span>
+                                        <span class="fw-bold text-dark" id="displayEnergyToDeliver">0.00 kWh</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                                        <span class="text-muted small">Est. Charging Duration</span>
+                                        <span class="fw-bold text-dark" id="displayChargingDuration">0h 0m</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                                        <span class="text-muted small">Scheduled End Time</span>
+                                        <span class="fw-bold text-primary-brand" id="displayEndTime">--:--</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between pt-2">
+                                        <span class="fw-bold text-dark fs-5">Estimated Bill</span>
+                                        <span class="fw-bold text-success-brand fs-4"><span id="liveCalculatedPrice">0.00</span> JOD</span>
+                                    </div>
+                                </div>
+
+                                <!-- 80% Fast DC slow down warning alert -->
+                                <div class="alert warning-ev-battery p-3 mb-3 shadow-sm" id="warningEvBattery">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-warning"></i>
+                                        <div>
+                                            <strong style="font-size: 0.9rem;">High Target Charge Warning!</strong>
+                                            <p class="mb-0 small" style="font-size: 0.8rem; line-height: 1.35;">Charging from 80% to 100% takes twice as long. We highly recommend targeting 80% to protect battery health and avoid slot hold delays.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info-brand border-0 small mb-4 shadow-sm" role="alert">
+                                    <i class="bi bi-shield-check me-2 fs-5 align-middle"></i>
+                                    <strong>Stripe Per-kWh Pricing Snapshot:</strong> 
+                                    AC Rate is <span class="badge-kwh-rate">@Model.PricePerKwh.ToString("F3") JOD / kWh</span>.
+                                    The reservation locks your slot for 10 minutes upon proceeding.
+                                </div>
+
+                                <button type="button" id="btnVerifyAndProceed" class="btn btn-checkout-lock w-100 py-3 fw-bold text-uppercase shadow-sm">
+                                    Lock Slot & Open Payment <i class="bi bi-wallet2 ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stripe Sidebar Panel -->
+        <div class="col-lg-4" id="stripeSidebar" style="display: none;">
+            <div class="card shadow-lg border-success-brand border-2 p-4 bg-white" style="border-radius: 20px; border: 2px solid rgba(16, 185, 129, 0.25);">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark mb-0"><i class="bi bi-credit-card me-2 text-emerald"></i>Secure Pay</h4>
+                    <button type="button" id="btnCloseSidebar" class="btn-close" aria-label="Close"></button>
+                </div>
+                <p class="text-muted small">Your card detail is securely tokenized and handled via Stripe TLS 1.3 encryption.</p>
+
+                <hr class="my-3 text-muted opacity-25">
+
+                <div class="mb-4 bg-light p-3 rounded-4 shadow-sm border border-white">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Charge energy:</span>
+                        <span id="summaryDuration" class="fw-bold text-dark">0 kWh</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-success-brand fs-5 fw-bold mt-1">
+                        <span>Total Due:</span>
+                        <span><span id="summaryTotal">0.00</span> JOD</span>
+                    </div>
+                </div>
+
+                <form id="stripePaymentForm">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary">Credit or Debit Card</label>
+                        <div id="stripeCardElement" data-publishable-key="@ViewBag.StripePublishableKey" class="form-control py-3" style="border-radius: 12px; border: 1px solid #cbd5e1;"></div>
+                        <div id="cardErrors" class="text-danger small mt-2" role="alert"></div>
+                    </div>
+
+                    <button type="submit" id="btnSubmitPayment" class="btn btn-lg w-100 py-3 fw-bold shadow-sm" style="border-radius: 16px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); border: none; color: white;">
+                        <span id="paymentSpinner" class="spinner-border spinner-border-sm d-none me-2" role="status"></span>
+                        Authorize Payment & Reserve Slot
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="~/js/checkout.js" asp-append-version="true"></script>
+}

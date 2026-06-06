@@ -1,8 +1,28 @@
-﻿@model Materpiece.Models.Station
+@model Materpiece.Models.Station
+@{
+    var slotStatuses = ViewBag.SlotStatuses as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
 
-<div class="p-3">
+<div class="p-3" id="sidebar-top">
     <h4>@Model.Name</h4>
-    <p class="text-muted">@Model.Address</p>
+    <p class="text-muted mb-1">@Model.Address</p>
+    
+    @if (Model.Reviews != null && Model.Reviews.Any())
+    {
+        var avgRating = Model.Reviews.Average(r => r.Rating);
+        <a href="#sidebar-reviews" class="text-decoration-none d-inline-block mb-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-star-fill text-warning me-1"></i>
+                <span class="fw-bold text-dark">@avgRating.ToString("F1")</span>
+                <span class="text-muted ms-1 small">(@Model.Reviews.Count reviews)</span>
+            </div>
+        </a>
+    }
+    else
+    {
+        <p class="text-muted small mb-3"><i class="bi bi-star text-secondary me-1"></i> No reviews yet</p>
+    }
+
     <p>@Model.Description</p>
     <hr />
     
@@ -10,25 +30,102 @@
     <ul class="list-group mb-3">
         @foreach(var slot in Model.ChargerSlots)
         {
+            var currentStatus = slotStatuses.ContainsKey(slot.SlotId) ? slotStatuses[slot.SlotId] : "Available";
+
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                Slot @slot.SlotNumber (@slot.Type)
-                <span class="badge bg-@(slot.Status.ToString() == "Available" ? "success" : "danger")">
-                    @slot.Status
-                </span>
+                <span>Slot @slot.SlotNumber <small class="text-muted">(@slot.Type)</small></span>
+                
+                @if (currentStatus == "Available")
+                {
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a href="/Bookings/Checkout?slotId=@slot.SlotId" class="btn btn-success btn-sm">
+                            <i class="fas fa-calendar-check me-1"></i> Book
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Available</span>
+                    }
+                }
+                else if (currentStatus == "Pending")
+                {
+                    <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i> Pending Payment</span>
+                }
+                else if (currentStatus == "Reserved")
+                {
+                    <span class="badge bg-danger"><i class="bi bi-shield-lock me-1"></i> Reserved</span>
+                }
+                else if (currentStatus == "Maintenance")
+                {
+                    <span class="badge bg-secondary"><i class="bi bi-tools me-1"></i> Maintenance</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Occupied</span>
+                }
             </li>
         }
     </ul>
 
-    @if (User.Identity.IsAuthenticated)
+    @if (User.Identity?.IsAuthenticated != true)
     {
-        <a href="/Bookings/Reserve?stationId=@Model.StationId" class="btn btn-primary w-100 py-2 shadow-sm">
-            <i class="fas fa-calendar-check me-2"></i> Book a Charger here
-        </a>
+        <div class="text-center mt-2">
+            <a href="/Identity/Account/Login?ReturnUrl=%2FMap" class="btn btn-warning btn-sm fw-bold w-100">
+                <i class="fas fa-sign-in-alt me-1"></i> Sign in to Book a Slot
+            </a>
+        </div>
     }
-    else
-    {
-        <a href="/Identity/Account/Login?ReturnUrl=%2FMap" class="btn btn-warning w-100 py-2 shadow-sm fw-bold">
-            <i class="fas fa-sign-in-alt me-2"></i> Login to Book this Station
-        </a>
-    }
+
+    <hr class="my-4" />
+
+    <!-- Reviews Section -->
+    <div id="sidebar-reviews" class="pt-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">User Reviews</h5>
+            <a href="#sidebar-top" class="small text-decoration-none text-muted"><i class="bi bi-arrow-up"></i> Top</a>
+        </div>
+        
+        @if (Model.Reviews != null && Model.Reviews.Any())
+        {
+            var reviewerNames = ViewBag.ReviewerNames as Dictionary<string, string> ?? new Dictionary<string, string>();
+            
+            foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+            {
+                var reviewerName = reviewerNames.ContainsKey(review.UserId) ? reviewerNames[review.UserId] : "EV Driver";
+                
+                <div class="card border-0 bg-light rounded-4 mb-3 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="fw-bold text-dark d-block" style="font-size: 0.95rem;">@reviewerName</span>
+                            <span class="text-muted" style="font-size: 0.75rem;">@review.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                        <div class="d-flex text-warning" style="font-size: 0.85rem;">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= review.Rating)
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star text-secondary opacity-50"></i>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <p class="mb-0 text-secondary" style="font-size: 0.9rem;">
+                        "@review.Comment"
+                    </p>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center text-muted p-4 border rounded-4 border-dashed">
+                <i class="bi bi-chat-square-text fs-2 d-block mb-2 opacity-50"></i>
+                <p class="small mb-0">No reviews have been posted for this station yet.</p>
+            </div>
+        }
+    </div>
 </div>

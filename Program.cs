@@ -1,6 +1,7 @@
 using Materpiece.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +15,23 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddRoles<IdentityRole>() 
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.AccessDeniedPath = "/Home/AccessDenied";
+});
 
 
+// Configure the Stripe SDK globally with your secret test key
 
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    // Tells the browser to always require HTTPS for cookies
+    options.Secure = CookieSecurePolicy.Always;
+
+    // Required for some modern browser strictness, especially with Stripe elements
+    options.MinimumSameSitePolicy = SameSiteMode.Lax;
+});
 
 var app = builder.Build();
 
@@ -62,47 +76,68 @@ using (var scope = app.Services.CreateScope())
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
+
+        // Clean up orphaned Pending bookings on startup to clear blocked time slots
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        var pendingBookings = dbContext.Bookings.Where(b => b.Status == BookingStatus.Pending);
+        dbContext.Bookings.RemoveRange(pendingBookings);
+        await dbContext.SaveChangesAsync();
+
+        // Seed default prices and power ratings for any existing charging slots
+        var slots = await dbContext.ChargerSlots.ToListAsync();
+        foreach (var s in slots)
+        {
+            // If it's a Fast DC charger and hasn't been set yet
+            if (s.Type == ChargerType.FastDC && s.PowerOutputKw == 0.0)
+            {
+                s.PowerOutputKw = 50.0; // 50kW Fast DC default
+                s.PricePerKwh = 0.17m; // 0.17 JOD/kWh
+            }
+            // If it's a Normal AC charger and hasn't been set yet
+            else if (s.Type == ChargerType.NormalAC && s.PowerOutputKw == 0.0)
+            {
+                s.PowerOutputKw = 11.0; // 11kW AC default
+                s.PricePerKwh = 0.12m; // 0.12 JOD/kWh
+            }
+        }
+        await dbContext.SaveChangesAsync();
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database roles and admin user.");
+        logger.LogError(ex, "An error occurred while seeding or cleaning up the database on startup.");
     }
 }
-
-// Configure the HTTP request pipeline.
+// Error handling & security first
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
 }
-else
+else 
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseHsts(); // Strict Transport Security
 }
-// 1. MUST BE FIRST
+
+app.UseHttpsRedirection();   // Force HTTPS
+app.UseStaticFiles();        // Serve static files (CSS, JS, images)
+
+app.UseRouting();            // Enable endpoint routing
+
+app.UseCookiePolicy();       // Apply cookie rules (Secure, SameSite, etc.)
+app.UseAuthentication();     // Identity authentication middleware
+app.UseAuthorization();      // Role/Policy-based authorization
+
+// Map routes AFTER middleware
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
-);
-
-// 2. MUST BE SECOND
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}"
-);
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthorization();
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapRazorPages();
+
+app.MapRazorPages();         // Identity UI endpoints
+
 
 app.Run();

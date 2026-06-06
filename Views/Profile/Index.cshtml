@@ -1,0 +1,586 @@
+@model IEnumerable<Booking>
+@{
+    ViewData["Title"] = "My Profile";
+    var email = ViewBag.Email as string ?? "";
+    var phoneNumber = ViewBag.PhoneNumber as string ?? "";
+    int totalBookings = ViewBag.TotalBookings ?? 0;
+    double totalEnergyKwh = ViewBag.TotalEnergyKwh ?? 0.0;
+    double co2SavedKg = ViewBag.Co2SavedKg ?? 0.0;
+
+    // Parse name for welcoming
+    var displayName = email;
+    if (email.Contains("@"))
+    {
+        var localPart = email.Split('@')[0];
+        var parts = localPart.Split(new[] { '.', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > 0)
+        {
+            displayName = string.Join(" ", parts.Select(p => char.ToUpper(p[0]) + p.Substring(1).ToLower()));
+        }
+    }
+}
+
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+
+    .profile-hero {
+        background: radial-gradient(circle at top right, #252a34, #0f172a);
+        border-radius: 24px;
+        color: #fff;
+        padding: 3rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        right: -50px;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.1), transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .profile-avatar-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        border: 3px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .glass-profile-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(16, 185, 129, 0.12);
+        border-radius: 28px;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.04);
+        padding: 2.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .glass-profile-card h5 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.5px;
+    }
+
+    /* Stats strip card designs */
+    .stat-card-mini {
+        background: #fff;
+        border: 1px solid rgba(16, 185, 129, 0.12);
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.02);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card-mini:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 30px rgba(16, 185, 129, 0.08);
+    }
+
+    .stat-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon-bookings {
+        background: rgba(6, 182, 212, 0.08);
+        color: #06b6d4;
+        border: 1px solid rgba(6, 182, 212, 0.15);
+    }
+
+    .stat-icon-energy {
+        background: rgba(16, 185, 129, 0.08);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+
+    .stat-icon-co2 {
+        background: rgba(245, 158, 11, 0.08);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.15);
+    }
+
+    .input-custom-profile {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        padding: 0.8rem 1rem !important;
+        transition: all 0.2s ease !important;
+        font-weight: 500;
+    }
+
+    .input-custom-profile:focus {
+        background-color: #ffffff !important;
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .btn-save-profile {
+        background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        border: none;
+        border-radius: 14px;
+        color: #fff;
+        padding: 0.9rem;
+        font-weight: 700;
+        font-size: 1rem;
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+        transition: all 0.25s ease;
+    }
+
+    .btn-save-profile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(16, 185, 129, 0.3);
+        color: #fff;
+    }
+
+    .btn-save-profile:active {
+        transform: translateY(0);
+    }
+
+    .booking-table-wrapper {
+        overflow-x: auto;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .table-profile-history th {
+        background-color: #f8fafc;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-profile-history td {
+        padding: 1.1rem 1rem;
+        vertical-align: middle;
+        font-size: 0.95rem;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table-profile-history tr:last-child td {
+        border-bottom: none;
+    }
+
+    .status-badge-pending {
+        background-color: rgba(245, 158, 11, 0.08) !important;
+        color: #d97706 !important;
+        border: 1px solid rgba(245, 158, 11, 0.15) !important;
+    }
+
+    .status-badge-confirmed {
+        background-color: rgba(16, 185, 129, 0.08) !important;
+        color: #16a34a !important;
+        border: 1px solid rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .status-badge-cancelled {
+        background-color: rgba(239, 68, 68, 0.08) !important;
+        color: #dc2626 !important;
+        border: 1px solid rgba(239, 68, 68, 0.15) !important;
+    }
+
+    .status-badge-completed {
+        background-color: rgba(6, 182, 212, 0.08) !important;
+        color: #0891b2 !important;
+        border: 1px solid rgba(6, 182, 212, 0.15) !important;
+    }
+</style>
+
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Hero Banner -->
+    <div class="profile-hero shadow-sm">
+        <div class="row align-items-center g-4">
+            <div class="col-md-auto text-center text-md-start">
+                <div class="profile-avatar-circle mx-auto">
+                    @displayName[0].ToString().ToUpper()
+                </div>
+            </div>
+            <div class="col-md text-center text-md-start">
+                <span class="text-white-50 text-uppercase small tracking-wider fw-bold">EV Pilot Account</span>
+                <h1 class="text-white fw-bold mb-1 mt-1">@displayName</h1>
+                <p class="text-white-50 mb-0"><i class="bi bi-envelope me-1"></i> @email</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Side: Profile Edit Form -->
+        <div class="col-lg-4">
+            <div class="glass-profile-card shadow-sm">
+                <h5 class="fw-bold mb-3"><i class="bi bi-person-fill-gear text-emerald me-2"></i>Account Information</h5>
+                <p class="text-muted small mb-4">View your registered details and update your primary mobile contact below.</p>
+
+                <form id="profileUpdateForm" autocomplete="off" onsubmit="handleProfileUpdate(event)">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary small">Email Address</label>
+                        <input type="text" class="form-control form-control-lg input-custom-profile" value="@email" readonly disabled />
+                        <small class="text-muted mt-1 d-block">Login email cannot be changed.</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary small">Mobile Phone Number</label>
+                        <input type="text" id="inputPhoneNumber" class="form-control form-control-lg input-custom-profile" 
+                               value="@phoneNumber" placeholder="+9627xxxxxxxx" required />
+                    </div>
+
+                    <button type="submit" id="btnSaveProfile" class="btn btn-save-profile w-100 py-3 fw-bold text-uppercase shadow-sm">
+                        Save Changes <i class="bi bi-check-circle-fill ms-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side: Stats strip & History -->
+        <div class="col-lg-8">
+            <!-- Stats Strip -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card-mini">
+                        <div class="stat-icon-wrapper stat-icon-bookings">
+                            <i class="bi bi-calendar3"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small d-block">Total Bookings</span>
+                            <h3 class="fw-bold mb-0 text-dark">@totalBookings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card-mini">
+                        <div class="stat-icon-wrapper stat-icon-energy">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small d-block">Energy Delivered</span>
+                            <h3 class="fw-bold mb-0 text-dark">@totalEnergyKwh.ToString("F1") <span class="fs-6 text-muted font-normal">kWh</span></h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card-mini">
+                        <div class="stat-icon-wrapper stat-icon-co2">
+                            <i class="bi bi-tree-fill"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small d-block">CO₂ Saved</span>
+                            <h3 class="fw-bold mb-0 text-dark">@co2SavedKg.ToString("F1") <span class="fs-6 text-muted font-normal">kg</span></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking History Card -->
+            <div class="glass-profile-card shadow-sm">
+                <h5 class="fw-bold mb-4"><i class="bi bi-clock-history text-emerald me-2"></i>My Charging Reservations</h5>
+                
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5 border rounded-4 bg-light border-dashed">
+                        <i class="bi bi-lightning-charge fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                        <h6 class="fw-bold text-secondary">No Reservations Found</h6>
+                        <p class="text-muted small mb-4">You haven't booked any EV charging slots yet.</p>
+                        <a href="/Map" class="btn btn-save-profile py-2 px-4 fw-bold">
+                            ⚡ Book First Slot
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="booking-table-wrapper">
+                        <table class="table table-profile-history mb-0 w-100">
+                            <thead>
+                                <tr>
+                                    <th>Station</th>
+                                    <th>Charger Type</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Energy Requested</th>
+                                    <th>Status</th>
+                                    <th>Total Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var booking in Model)
+                                {
+                                    var slotText = booking.ChargerSlot?.SlotNumber ?? "Slot";
+                                    var stationName = booking.ChargerSlot?.Station?.Name ?? "EV Station";
+                                    var typeText = booking.ChargerSlot?.Type == ChargerType.FastDC ? "Fast DC" : "Normal AC";
+                                    var powerText = booking.ChargerSlot?.PowerOutputKw ?? 7.4;
+                                    var cost = (decimal)booking.EnergyRequestedKwh * booking.RatePricePerKwh;
+
+                                    <tr>
+                                        <td>
+                                            <span class="fw-bold d-block">@stationName</span>
+                                            <span class="text-muted small">@slotText</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">@typeText (@powerText kW)</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold d-block">@booking.StartTime.ToString("yyyy-MM-dd")</span>
+                                            <span class="text-muted small">@booking.StartTime.ToString("HH:mm") - @booking.EndTime.ToString("HH:mm")</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">@booking.EnergyRequestedKwh.ToString("F1") kWh</span>
+                                        </td>
+                                        <td>
+                                            @if (booking.Status == BookingStatus.Pending)
+                                            {
+                                                <span class="badge status-badge-pending px-3 py-2 rounded-pill"><i class="bi bi-clock me-1"></i> Pending</span>
+                                            }
+                                            else if (booking.Status == BookingStatus.Confirmed)
+                                            {
+                                                <span class="badge status-badge-confirmed px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i> Confirmed</span>
+                                            }
+                                            else if (booking.Status == BookingStatus.Cancelled)
+                                            {
+                                                <span class="badge status-badge-cancelled px-3 py-2 rounded-pill"><i class="bi bi-x-circle me-1"></i> Cancelled</span>
+                                            }
+                                            else if (booking.Status == BookingStatus.Completed)
+                                            {
+                                                <div class="d-flex flex-column gap-2 align-items-start">
+                                                    <span class="badge status-badge-completed px-3 py-2 rounded-pill"><i class="bi bi-shield-fill-check me-1"></i> Completed</span>
+                                                    @{
+                                                        var reviewedIds = ViewBag.ReviewedBookingIds as List<int> ?? new List<int>();
+                                                    }
+                                                    @if (!reviewedIds.Contains(booking.BookingId))
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-success rounded-pill fw-bold" onclick="openReviewModal(@booking.BookingId, @(booking.ChargerSlot?.StationId ?? 0), '@stationName.Replace("'", "\\'")')">
+                                                            <i class="bi bi-star-fill text-warning me-1"></i> Leave Review
+                                                        </button>
+                                                    }
+                                                </div>
+                                            }
+                                        </td>
+                                        <td class="fw-bold text-success-brand">
+                                            @cost.ToString("F2") JOD
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal (Glassmorphic) -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-profile-card p-2">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="reviewModalLabel">
+                    <i class="bi bi-star-fill text-warning me-2"></i>Rate Your Experience
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <p class="text-muted small mb-4">How was your charging session at <strong id="reviewStationName" class="text-dark"></strong>?</p>
+                <form id="reviewForm" onsubmit="submitReview(event)">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="reviewBookingId" />
+                    <input type="hidden" id="reviewStationId" />
+
+                    <div class="mb-4 text-center">
+                        <div class="rating-stars fs-1" style="color: #cbd5e1; cursor: pointer;">
+                            <i class="bi bi-star-fill star-icon" data-val="1"></i>
+                            <i class="bi bi-star-fill star-icon" data-val="2"></i>
+                            <i class="bi bi-star-fill star-icon" data-val="3"></i>
+                            <i class="bi bi-star-fill star-icon" data-val="4"></i>
+                            <i class="bi bi-star-fill star-icon" data-val="5"></i>
+                        </div>
+                        <input type="hidden" id="reviewRating" value="0" required />
+                        <div class="text-danger small mt-1 d-none" id="ratingError">Please select a rating</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary small">Your Review</label>
+                        <textarea id="reviewComment" class="form-control input-custom-profile" rows="4" placeholder="Tell us what you liked or how we can improve..." required maxlength="1000"></textarea>
+                    </div>
+
+                    <button type="submit" id="btnSubmitReview" class="btn btn-save-profile w-100 py-3 fw-bold text-uppercase shadow-sm">
+                        Submit Review <i class="bi bi-send-fill ms-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Profile Phone Update Script (Existing)
+    function handleProfileUpdate(e) {
+        e.preventDefault();
+
+        const btnSave = document.getElementById("btnSaveProfile");
+        const phoneNumber = document.getElementById("inputPhoneNumber").value.trim();
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        btnSave.disabled = true;
+        const originalBtnHtml = btnSave.innerHTML;
+        btnSave.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...`;
+
+        fetch('/Profile/UpdatePhone', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ phoneNumber: phoneNumber })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success', title: '⚡ Profile Updated!', text: data.message,
+                    confirmButtonColor: '#10b981', customClass: { popup: 'rounded-4', confirmButton: 'fw-bold' }
+                });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Update Failed', text: data.message, confirmButtonColor: '#10b981' });
+            }
+        })
+        .catch(error => {
+            Swal.fire({ icon: 'error', title: 'Network Error', text: error.message || 'Unable to update details.', confirmButtonColor: '#10b981' });
+        })
+        .finally(() => {
+            btnSave.disabled = false;
+            btnSave.innerHTML = originalBtnHtml;
+        });
+    }
+
+    // Review Modal Script
+    let reviewModalInstance = null;
+
+    function openReviewModal(bookingId, stationId, stationName) {
+        document.getElementById('reviewBookingId').value = bookingId;
+        document.getElementById('reviewStationId').value = stationId;
+        document.getElementById('reviewStationName').innerText = stationName;
+        
+        // Reset form
+        document.getElementById('reviewComment').value = '';
+        document.getElementById('reviewRating').value = '0';
+        document.getElementById('ratingError').classList.add('d-none');
+        document.querySelectorAll('.star-icon').forEach(s => {
+            s.style.color = '#cbd5e1';
+            s.classList.replace('bi-star-fill', 'bi-star');
+        });
+
+        if(!reviewModalInstance) {
+            reviewModalInstance = new bootstrap.Modal(document.getElementById('reviewModal'));
+        }
+        reviewModalInstance.show();
+    }
+
+    // Star Rating Hover and Click logic
+    document.querySelectorAll('.star-icon').forEach(star => {
+        star.addEventListener('mouseover', function() {
+            let val = parseInt(this.getAttribute('data-val'));
+            document.querySelectorAll('.star-icon').forEach(s => {
+                let sVal = parseInt(s.getAttribute('data-val'));
+                s.style.color = sVal <= val ? '#f59e0b' : '#cbd5e1';
+                s.className = sVal <= val ? 'bi bi-star-fill star-icon' : 'bi bi-star star-icon';
+            });
+        });
+
+        star.addEventListener('mouseleave', function() {
+            let currentVal = parseInt(document.getElementById('reviewRating').value);
+            document.querySelectorAll('.star-icon').forEach(s => {
+                let sVal = parseInt(s.getAttribute('data-val'));
+                s.style.color = sVal <= currentVal ? '#f59e0b' : '#cbd5e1';
+                s.className = sVal <= currentVal ? 'bi bi-star-fill star-icon' : 'bi bi-star star-icon';
+            });
+        });
+
+        star.addEventListener('click', function() {
+            let val = parseInt(this.getAttribute('data-val'));
+            document.getElementById('reviewRating').value = val;
+            document.getElementById('ratingError').classList.add('d-none');
+        });
+    });
+
+    function submitReview(e) {
+        e.preventDefault();
+        
+        const rating = parseInt(document.getElementById('reviewRating').value);
+        if (rating === 0) {
+            document.getElementById('ratingError').classList.remove('d-none');
+            return;
+        }
+
+        const btnSubmit = document.getElementById('btnSubmitReview');
+        const token = document.querySelector('#reviewForm input[name="__RequestVerificationToken"]').value;
+        const payload = {
+            BookingId: parseInt(document.getElementById('reviewBookingId').value),
+            StationId: parseInt(document.getElementById('reviewStationId').value),
+            Rating: rating,
+            Comment: document.getElementById('reviewComment').value.trim()
+        };
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Submitting...`;
+
+        fetch('/Reviews/SubmitReview', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                reviewModalInstance.hide();
+                Swal.fire({
+                    icon: 'success', title: 'Review Submitted!', text: 'Thank you for your feedback.',
+                    confirmButtonColor: '#10b981', customClass: { popup: 'rounded-4' }
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#10b981' });
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `Submit Review <i class="bi bi-send-fill ms-1"></i>`;
+            }
+        })
+        .catch(error => {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Network error occurred.', confirmButtonColor: '#10b981' });
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = `Submit Review <i class="bi bi-send-fill ms-1"></i>`;
+        });
+    }
+</script>

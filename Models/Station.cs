@@ -30,12 +30,9 @@ namespace Materpiece.Models
         public string? Description { get; set; }
 
         [Required]
-        public string OwnerId { get; set; } = string.Empty; 
-
+        public string OwnerId { get; set; } = string.Empty;  
 
         public ICollection<ChargerSlot> ChargerSlots { get; set; } = new List<ChargerSlot>();
-
-
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }
